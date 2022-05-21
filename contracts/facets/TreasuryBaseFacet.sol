@@ -21,8 +21,8 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     event Managed(address indexed token, uint256 amount);
     event ReservesAudited(uint256 indexed totalReserves);
     event Minted(address indexed caller, address indexed recipient, uint256 amount);
-    event PermissionQueued(STATUS indexed status, address queued);
-    event Permissioned(address addr, STATUS indexed status, bool result);
+    event PermissionQueued(uint256 indexed status, address queued);
+    event Permissioned(address addr, uint256 indexed status, bool result);
 
     string internal notAccepted = "Treasury: not accepted";
     string internal notApproved = "Treasury: not approved";
@@ -54,8 +54,8 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
         address _token,
         uint256 _profit
     ) external override returns (uint256 send_) {
-        if (ts().permissions[STATUS.ASSET][_token]) {
-            require(ts().permissions[STATUS.ASSETDEPOSITOR][msg.sender], notApproved);
+        if (ts().permissions[1][_token]) {
+            require(ts().permissions[0][msg.sender], notApproved);
         } else {
             revert(invalidAsset);
         }
@@ -78,8 +78,8 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _asset address
      */
     function withdraw(uint256 _amount, address _asset) external override {
-        require(ts().permissions[STATUS.ASSET][_asset], notAccepted); // Only reserves can be used for redemptions
-        require(ts().permissions[STATUS.ASSETMANAGER][msg.sender], notApproved);
+        require(ts().permissions[1][_asset], notAccepted); // Only reserves can be used for redemptions
+        require(ts().permissions[2][msg.sender], notApproved);
 
         uint256 value = assetValue(_asset, _amount);
         ts().REQ.burnFrom(msg.sender, value);
@@ -97,9 +97,9 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function manage(address _asset, uint256 _amount) external override {
-        require(ts().permissions[STATUS.ASSETMANAGER][msg.sender], notApproved);
+        require(ts().permissions[2][msg.sender], notApproved);
 
-        if (ts().permissions[STATUS.ASSET][_asset]) {
+        if (ts().permissions[1][_asset]) {
             uint256 value = assetValue(_asset, _amount);
             if (ts().useExcessReserves) require(int256(value) <= excessReserves(), insufficientReserves);
 
@@ -115,7 +115,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function mint(address _recipient, uint256 _amount) external override {
-        require(ts().permissions[STATUS.REWARDMANAGER][msg.sender], notApproved);
+        require(ts().permissions[3][msg.sender], notApproved);
         if (ts().useExcessReserves) require(int256(_amount) <= excessReserves(), insufficientReserves);
 
         ts().REQ.mint(_recipient, _amount);
@@ -139,7 +139,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      */
     function incurDebt(uint256 _amount, address _token) external override {
         uint256 value;
-        require(ts().permissions[STATUS.DEBTOR][msg.sender], notApproved);
+        require(ts().permissions[5][msg.sender], notApproved);
 
         if (_token == address(ts().REQ)) {
             value = _amount;
@@ -168,8 +168,8 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _token address
      */
     function repayDebtWithReserve(uint256 _amount, address _token) external override {
-        require(ts().permissions[STATUS.DEBTOR][msg.sender], notApproved);
-        require(ts().permissions[STATUS.ASSET][_token], notAccepted);
+        require(ts().permissions[5][msg.sender], notApproved);
+        require(ts().permissions[1][_token], notAccepted);
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
         uint256 value = assetValue(_token, _amount);
         ts().CREQ.changeDebt(value, msg.sender, false);
@@ -183,7 +183,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function repayDebtWithREQ(uint256 _amount) external {
-        require(ts().permissions[STATUS.DEBTOR][msg.sender], notApproved);
+        require(ts().permissions[5][msg.sender], notApproved);
         ts().REQ.burnFrom(msg.sender, _amount);
         ts().CREQ.changeDebt(_amount, msg.sender, false);
         ts().totalDebt -= _amount;
@@ -199,9 +199,9 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      */
     function auditReserves() external onlyGovernor {
         uint256 reserves;
-        address[] memory assets = ts().registry[STATUS.ASSET];
+        address[] memory assets = ts().registry[1];
         for (uint256 i = 0; i < assets.length; i++) {
-            if (ts().permissions[STATUS.ASSET][assets[i]]) {
+            if (ts().permissions[1][assets[i]]) {
                 reserves += assetValue(assets[i], IERC20(assets[i]).balanceOf(address(this)));
             }
         }
@@ -225,17 +225,17 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _calculator address
      */
     function enable(
-        STATUS _status,
+        uint256 _status,
         address _address,
         address _calculator
     ) external {
         require(ts().timelockEnabled == false, "Use queueTimelock");
-        if (_status == STATUS.CREQ) {
+        if (_status == 7) {
             ts().CREQ = ICreditREQ(_address);
         } else {
             ts().permissions[_status][_address] = true;
 
-            if (_status == STATUS.ASSET) {
+            if (_status == 1) {
                 ts().assetPricer[_address] = _calculator;
             }
 
@@ -243,7 +243,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
             if (!registered) {
                 ts().registry[_status].push(_address);
 
-                if (_status == STATUS.ASSET) {
+                if (_status == 1) {
                     (bool reg, uint256 index) = indexInRegistry(_address, _status);
                     if (reg) {
                         delete ts().registry[_status][index];
@@ -259,7 +259,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      *  @param _status STATUS
      *  @param _toDisable address
      */
-    function disable(STATUS _status, address _toDisable) external {
+    function disable(uint256 _status, address _toDisable) external {
         require(msg.sender == ts().authority.governor() || msg.sender == ts().authority.guardian(), "Only governor or guardian");
         ts().permissions[_status][_toDisable] = false;
         emit Permissioned(_toDisable, _status, false);
@@ -269,7 +269,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @notice check if ts().registry contains address
      * @return (bool, uint256)
      */
-    function indexInRegistry(address _address, STATUS _status) public view returns (bool, uint256) {
+    function indexInRegistry(address _address, uint256 _status) public view returns (bool, uint256) {
         address[] memory entries = ts().registry[_status];
         for (uint256 i = 0; i < entries.length; i++) {
             if (_address == entries[i]) {
@@ -297,7 +297,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _calculator address
      */
     function queueTimelock(
-        STATUS _status,
+        uint256 _status,
         address _address,
         address _calculator
     ) external onlyGovernor {
@@ -305,7 +305,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
         require(ts().timelockEnabled == true, "Timelock is disabled, use enable");
 
         uint256 timelock = block.number + ts().blocksNeededForQueue;
-        if (_status == STATUS.ASSETMANAGER) {
+        if (_status == 2) {
             timelock = block.number + ts().blocksNeededForQueue * 2;
         }
         ts().permissionQueue.push(
@@ -327,23 +327,23 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
         require(!info.executed, "Action has already been executed");
         require(block.number >= info.timelockEnd, "Timelock not complete");
 
-        if (info.managing == STATUS.CREQ) {
+        if (info.managing == 7) {
             // 9
             ts().CREQ = ICreditREQ(info.toPermit);
         } else {
             ts().permissions[info.managing][info.toPermit] = true;
 
-            if (info.managing == STATUS.ASSET) {
+            if (info.managing == 1) {
                 ts().assetPricer[info.toPermit] = info.calculator;
             }
             (bool registered, ) = indexInRegistry(info.toPermit, info.managing);
             if (!registered) {
                 ts().registry[info.managing].push(info.toPermit);
 
-                if (info.managing == STATUS.ASSET) {
-                    (bool reg, uint256 index) = indexInRegistry(info.toPermit, STATUS.ASSET);
+                if (info.managing == 1) {
+                    (bool reg, uint256 index) = indexInRegistry(info.toPermit, 1);
                     if (reg) {
-                        delete ts().registry[STATUS.ASSET][index];
+                        delete ts().registry[1][index];
                     }
                 }
             }
@@ -398,7 +398,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @return value_ uint256
      */
     function assetValue(address _token, uint256 _amount) public view override returns (uint256 value_) {
-        if (ts().permissions[STATUS.ASSET][_token]) {
+        if (ts().permissions[1][_token]) {
             value_ = IAssetPricer(ts().assetPricer[_token]).valuation(_token, _amount);
         } else {
             revert(invalidAsset);

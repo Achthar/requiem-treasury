@@ -6,19 +6,21 @@ import "../interfaces/ICreditREQ.sol";
 import "../interfaces/IAuthority.sol";
 import "./LibDiamond.sol";
 
-enum STATUS {
-    ASSETDEPOSITOR,
-    ASSET,
-    ASSETMANAGER,
-    REWARDMANAGER,
-    DEBTMANAGER,
-    DEBTOR,
-    COLLATERAL,
-    CREQ
-}
+// enum here jsut for reference - uint256 used for upgradability
+// enum STATUS {
+//     ASSETDEPOSITOR, =0
+//     ASSET, = 1
+//     ASSETMANAGER, = 2
+//     REWARDMANAGER, = 3
+//     DEBTMANAGER, = 4
+//     DEBTOR, = 5
+//     COLLATERAL, = 6
+//     CREQ = 7
+// }
 
 struct Queue {
-    STATUS managing;
+    // STATUS managing;
+    uint256 managing;
     address toPermit;
     address calculator;
     uint256 timelockEnd;
@@ -33,8 +35,8 @@ struct TreasuryStorage {
     IREQ REQ;
     ICreditREQ CREQ;
     // general registers
-    mapping(STATUS => address[]) registry;
-    mapping(STATUS => mapping(address => bool)) permissions;
+    mapping(uint256 => address[]) registry;
+    mapping(uint256 => mapping(address => bool)) permissions;
     mapping(address => address) assetPricer;
     mapping(address => uint256) debtLimit;
     // asset data

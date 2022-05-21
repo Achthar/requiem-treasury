@@ -31,6 +31,10 @@ module.exports = {
   contractSizer: {
     runOnCompile: true,
     disambiguatePaths: false,
-  }
-  
+  },
+  typechain: {
+    outDir: 'types',
+    target: 'ethers-v5',
+  },
+
 }
