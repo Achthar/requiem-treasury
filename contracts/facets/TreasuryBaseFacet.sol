@@ -2,7 +2,6 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibStorage.sol";
-import "../libraries/LibDiamond.sol";
 import "../libraries/SafeERC20.sol";
 
 import "../interfaces/IERC20.sol";
@@ -31,18 +30,13 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     string internal insufficientReserves = "Treasury: insufficient reserves";
 
     // administrative
-    modifier onlyAdmin() {
-        LibDiamond.enforceIsContractOwner();
-        _;
-    }
-
     modifier onlyGovernor() {
-        LibDiamond.enforceGovernor();
+        LibStorage.enforceGovernor();
         _;
     }
 
     modifier onlyPolicy() {
-        LibDiamond.enforcePolicy();
+        LibStorage.enforcePolicy();
         _;
     }
 
@@ -189,7 +183,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function repayDebtWithREQ(uint256 _amount) external {
-        require(ts().permissions[STATUS.RESERVEDEBTOR][msg.sender] || ts().permissions[STATUS.DEBTOR][msg.sender], notApproved);
+        require(ts().permissions[STATUS.DEBTOR][msg.sender], notApproved);
         ts().REQ.burnFrom(msg.sender, _amount);
         ts().CREQ.changeDebt(_amount, msg.sender, false);
         ts().totalDebt -= _amount;
@@ -266,7 +260,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      *  @param _toDisable address
      */
     function disable(STATUS _status, address _toDisable) external {
-        require(msg.sender == ds().authority.governor() || msg.sender == ds().authority.guardian(), "Only governor or guardian");
+        require(msg.sender == ts().authority.governor() || msg.sender == ts().authority.guardian(), "Only governor or guardian");
         ts().permissions[_status][_toDisable] = false;
         emit Permissioned(_toDisable, _status, false);
     }

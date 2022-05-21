@@ -3,16 +3,17 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IREQ.sol";
 import "../interfaces/ICreditREQ.sol";
+import "../interfaces/IAuthority.sol";
 import "./LibDiamond.sol";
 
 enum STATUS {
     ASSETDEPOSITOR,
     ASSET,
     ASSETMANAGER,
-    RESERVEDEBTOR,
     REWARDMANAGER,
     DEBTMANAGER,
     DEBTOR,
+    COLLATERAL,
     CREQ
 }
 
@@ -25,26 +26,13 @@ struct Queue {
     bool executed;
 }
 
-struct AssetBackedInformation {
-    address[] backingAssets;
-    uint256[] assetRatios;
-}
-
-struct FacetAddressAndPosition {
-    address facetAddress;
-    uint96 functionSelectorPosition; // position in facetFunctionSelectors.functionSelectors array
-}
-
-struct FacetFunctionSelectors {
-    bytes4[] functionSelectors;
-    uint256 facetAddressPosition; // position of facetAddress in facetAddresses array
-}
-
 struct TreasuryStorage {
+    // authority
+    IAuthority authority;
     // requiem global assets
     IREQ REQ;
     ICreditREQ CREQ;
-
+    // general registers
     mapping(STATUS => address[]) registry;
     mapping(STATUS => mapping(address => bool)) permissions;
     mapping(address => address) assetPricer;
@@ -52,6 +40,7 @@ struct TreasuryStorage {
     // asset data
     mapping(address => uint256) assetReserves;
     mapping(address => uint256) assetDebt;
+    // aggregted data
     uint256 totalReserves;
     uint256 totalDebt;
     uint256 reqDebt;
@@ -82,7 +71,7 @@ struct TreasuryStorage {
  * This becomes a problem when using base contracts that manage their own state internally.
  *
  * There are a few caveats to this approach:
- * 1. State must always be loaded through a function (`LibStorage.gameStorage()`)
+ * 1. State must always be loaded through a function (`LibStorage.treasuryStorage()`)
  *    instead of accessing it as a variable directly. The `WithStorage` base contract
  *    below provides convenience functions, such as `gs()`, for accessing storage.
  * 2. Although inherited contracts can have their own state, top level contracts must
@@ -108,14 +97,23 @@ struct TreasuryStorage {
  */
 library LibStorage {
     // Storage are structs where the data gets updated throughout the lifespan of the game
-    bytes32 constant DIAMOND_STORAGE = keccak256("requiem.storage.diamond");
     bytes32 constant TREASURY_STORAGE = keccak256("requiem.storage.treasury");
 
-    function diamondStorage() internal pure returns (LibDiamond.DiamondStorage storage ds) {
-        bytes32 position = DIAMOND_STORAGE;
-        assembly {
-            ds.slot := position
-        }
+    // Treasury access control
+    function enforcePolicy() internal view {
+        require(msg.sender == treasuryStorage().authority.policy(), "Treasury: Must be policy");
+    }
+
+    function enforceGovernor() internal view {
+        require(msg.sender == treasuryStorage().authority.governor(), "Treasury: Must be governor");
+    }
+
+    function enforceGuardian() internal view {
+        require(msg.sender == treasuryStorage().authority.guardian(), "Treasury: Must be guardian");
+    }
+
+    function enforceVault() internal view {
+        require(msg.sender == treasuryStorage().authority.guardian(), "Treasury: Must be vault");
     }
 
     function treasuryStorage() internal pure returns (TreasuryStorage storage ts) {
@@ -136,10 +134,6 @@ library LibStorage {
  * state variable, please refer to the documentation above `LibStorage` in this file.
  */
 contract WithStorage {
-    function ds() internal pure returns (LibDiamond.DiamondStorage storage) {
-        return LibStorage.diamondStorage();
-    }
-
     function ts() internal pure returns (TreasuryStorage storage) {
         return LibStorage.treasuryStorage();
     }

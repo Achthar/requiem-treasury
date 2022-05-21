@@ -45,10 +45,10 @@ contract TreasuryInit is WithStorage {
         // in order to set state variables in the diamond during deployment or an upgrade
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
 
-        ds.authority = IAuthority(_authority);
 
         TreasuryStorage storage ts = LibStorage.treasuryStorage();
         require(_req != address(0), "Zero address: REQ");
+        ts.authority = IAuthority(_authority);
         ts.REQ = IREQ(_req);
         ts.timelockEnabled = false;
         ts.initialized = false;
