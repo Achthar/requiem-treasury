@@ -2,52 +2,51 @@
 
 pragma solidity >=0.7.5;
 
-import "../interfaces/IAuthority.sol";
+import "../interfaces/IManagement.sol";
 
 abstract contract AccessControlled {
   /* ========== EVENTS ========== */
 
-  event AuthorityUpdated(IAuthority indexed authority);
+  event ManagementUpdated(IManagement indexed management);
 
   string UNAUTHORIZED = "UNAUTHORIZED"; // save gas
 
   /* ========== STATE VARIABLES ========== */
 
-  IAuthority public authority;
+  IManagement public management;
 
   /* ========== Constructor ========== */
 
-  constructor(IAuthority _authority) {
-    authority = _authority;
-    emit AuthorityUpdated(_authority);
+  function intitalizeManagement(IManagement _management) internal {
+    management = _management;
   }
 
   /* ========== MODIFIERS ========== */
 
   modifier onlyGovernor() {
-    require(msg.sender == authority.governor(), UNAUTHORIZED);
+    require(msg.sender == management.governor(), UNAUTHORIZED);
     _;
   }
 
   modifier onlyGuardian() {
-    require(msg.sender == authority.guardian(), UNAUTHORIZED);
+    require(msg.sender == management.guardian(), UNAUTHORIZED);
     _;
   }
 
   modifier onlyPolicy() {
-    require(msg.sender == authority.policy(), UNAUTHORIZED);
+    require(msg.sender == management.policy(), UNAUTHORIZED);
     _;
   }
 
   modifier onlyVault() {
-    require(msg.sender == authority.vault(), UNAUTHORIZED);
+    require(msg.sender == management.vault(), UNAUTHORIZED);
     _;
   }
 
   /* ========== GOV ONLY ========== */
 
-  function setAuthority(IAuthority _newAuthority) external onlyGovernor {
-    authority = _newAuthority;
-    emit AuthorityUpdated(_newAuthority);
+  function setManagement(IManagement _newManagement) external onlyGovernor {
+    management = _newManagement;
+    emit ManagementUpdated(_newManagement);
   }
 }

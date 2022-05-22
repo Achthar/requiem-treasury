@@ -9,13 +9,13 @@ pragma solidity ^0.8.0;
 /******************************************************************************/
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {LibStorage, WithStorage, TreasuryStorage} from "../libraries/LibStorage.sol";
+import {LibStorage, WithStorage, TreasuryStorage, ManagementStorage} from "../libraries/LibStorage.sol";
 
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IERC173} from "../interfaces/IERC173.sol";
 import {IERC165} from "../interfaces/IERC165.sol";
-import {IAuthority} from "../interfaces/IAuthority.sol";
+import {IManagement} from "../interfaces/IManagement.sol";
 import {IREQ} from "../interfaces/IREQ.sol";
 import {ICreditREQ} from "../interfaces/ICreditREQ.sol";
 
@@ -27,7 +27,7 @@ contract TreasuryInit is WithStorage {
     // You can add parameters to this function in order to pass in
     // data to set your own state variables
     function init(
-        address _authority,
+        address _management,
         address _req,
         address _creq
     ) external {
@@ -45,15 +45,18 @@ contract TreasuryInit is WithStorage {
         // in order to set state variables in the diamond during deployment or an upgrade
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
 
-
         TreasuryStorage storage ts = LibStorage.treasuryStorage();
         require(_req != address(0), "Zero address: REQ");
-        ts.authority = IAuthority(_authority);
         ts.REQ = IREQ(_req);
-        ts.timelockEnabled = false;
-        ts.initialized = false;
+        ts.timelockEnabled = true;
         ts.blocksNeededForQueue = 0;
         ts.useExcessReserves = false;
         ts.CREQ = ICreditREQ(_creq);
+
+        ManagementStorage storage ms = LibStorage.managementStorage();
+        ms.governor = _management;
+        ms.guardian = _management;
+        ms.policy = _management;
+        ms.vault = _management;
     }
 }

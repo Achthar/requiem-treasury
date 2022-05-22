@@ -229,7 +229,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
         address _address,
         address _calculator
     ) external {
-        require(ts().timelockEnabled == false, "Use queueTimelock");
+        require(!ts().timelockEnabled, "Use queueTimelock");
         if (_status == 7) {
             ts().CREQ = ICreditREQ(_address);
         } else {
@@ -260,7 +260,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      *  @param _toDisable address
      */
     function disable(uint256 _status, address _toDisable) external {
-        require(msg.sender == ts().authority.governor() || msg.sender == ts().authority.guardian(), "Only governor or guardian");
+        require(msg.sender == ms().governor || msg.sender == ms().guardian, "Only governor or guardian");
         ts().permissions[_status][_toDisable] = false;
         emit Permissioned(_toDisable, _status, false);
     }
@@ -302,8 +302,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
         address _calculator
     ) external onlyGovernor {
         require(_address != address(0));
-        require(ts().timelockEnabled == true, "Timelock is disabled, use enable");
-
+        require(ts().timelockEnabled, "Timelock is disabled, use enable");
         uint256 timelock = block.number + ts().blocksNeededForQueue;
         if (_status == 2) {
             timelock = block.number + ts().blocksNeededForQueue * 2;
@@ -364,7 +363,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @notice disables timelocked functions
      */
     function disableTimelock() external onlyGovernor {
-        require(ts().timelockEnabled == true, "timelock already disabled");
+        require(ts().timelockEnabled, "timelock already disabled");
         if (ts().onChainGovernanceTimelock != 0 && ts().onChainGovernanceTimelock <= block.number) {
             ts().timelockEnabled = false;
         } else {
@@ -375,10 +374,10 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     /**
      * @notice enables timelocks after initilization
      */
-    function initialize() external onlyGovernor {
-        require(ts().initialized == false, "Already initialized");
+    function enableTimelock(uint256 _blocksNeededForQueue) external onlyGovernor {
+        require(!ts().timelockEnabled, "timelock already enabled");
         ts().timelockEnabled = true;
-        ts().initialized = true;
+        ts().blocksNeededForQueue = _blocksNeededForQueue;
     }
 
     /* ========== VIEW FUNCTIONS ========== */
@@ -466,9 +465,5 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
 
     function CCREQ() public view returns (ICreditREQ) {
         return ts().CREQ;
-    }
-
-    function authority() public view returns (IAuthority) {
-        return ts().authority;
     }
 }

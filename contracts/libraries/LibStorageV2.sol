@@ -38,7 +38,7 @@ struct ManagementStorage {
     address newVault;
 }
 
-struct TreasuryStorage {
+struct TreasuryStorageV2 {
     // requiem global assets
     IREQ REQ;
     ICreditREQ CREQ;
@@ -59,6 +59,11 @@ struct TreasuryStorage {
     bool timelockEnabled;
     bool useExcessReserves;
     uint256 onChainGovernanceTimelock;
+    uint256 testField;
+}
+
+struct NewStorage {
+    uint256 addedValue;
 }
 
 /**
@@ -109,7 +114,7 @@ library LibStorage {
     bytes32 constant TREASURY_STORAGE = keccak256("requiem.storage.treasury");
     bytes32 constant MANAGEMENT_STORAGE = keccak256("requiem.storage.authority");
 
-    function treasuryStorage() internal pure returns (TreasuryStorage storage ts) {
+    function treasuryStorage() internal pure returns (TreasuryStorageV2 storage ts) {
         bytes32 position = TREASURY_STORAGE;
         assembly {
             ts.slot := position
@@ -122,7 +127,6 @@ library LibStorage {
             ms.slot := position
         }
     }
-
     // Authority access control
     function enforcePolicy() internal view {
         require(msg.sender == managementStorage().policy, "Treasury: Must be policy");
@@ -139,6 +143,15 @@ library LibStorage {
     function enforceVault() internal view {
         require(msg.sender == managementStorage().guardian, "Treasury: Must be vault");
     }
+    // Storage are structs where the data gets updated throughout the lifespan of the project
+    bytes32 constant ADDED_STORAGE = keccak256("requiem.storage.added");
+
+    function newStorage() internal pure returns (NewStorage storage ns) {
+        bytes32 position = ADDED_STORAGE;
+        assembly {
+            ns.slot := position
+        }
+    }
 }
 
 /**
@@ -151,11 +164,16 @@ library LibStorage {
  * state variable, please refer to the documentation above `LibStorage` in this file.
  */
 contract WithStorage {
-    function ts() internal pure returns (TreasuryStorage storage) {
+    function ts() internal pure returns (TreasuryStorageV2 storage) {
         return LibStorage.treasuryStorage();
     }
 
     function ms() internal pure returns (ManagementStorage storage) {
         return LibStorage.managementStorage();
+    }
+
+    // extended storage
+    function ns() internal pure returns (NewStorage storage) {
+        return LibStorage.newStorage();
     }
 }

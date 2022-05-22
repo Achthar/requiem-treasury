@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../libraries/LibStorage.sol";
+import "../libraries/LibStorageV2.sol";
 import "../libraries/SafeERC20.sol";
 
 import "../interfaces/IERC20.sol";
@@ -260,7 +260,7 @@ contract TreasuryBaseFacetV2 is ITreasury, WithStorage {
      *  @param _toDisable address
      */
     function disable(uint256 _status, address _toDisable) external {
-        require(msg.sender == ts().authority.governor() || msg.sender == ts().authority.guardian(), "Only governor or guardian");
+        require(msg.sender == ms().governor || msg.sender == ms().guardian, "Only governor or guardian");
         ts().permissions[_status][_toDisable] = false;
         emit Permissioned(_toDisable, _status, false);
     }
@@ -375,12 +375,11 @@ contract TreasuryBaseFacetV2 is ITreasury, WithStorage {
     /**
      * @notice enables timelocks after initilization
      */
-    function initialize() external onlyGovernor {
-        require(ts().initialized == false, "Already initialized");
+    function enableTimelock(uint256 _blocksNeededForQueue) external onlyGovernor {
+        require(!ts().timelockEnabled, "timelock already enabled");
         ts().timelockEnabled = true;
-        ts().initialized = true;
+        ts().blocksNeededForQueue = _blocksNeededForQueue;
     }
-
     /* ========== VIEW FUNCTIONS ========== */
 
     /**
@@ -468,7 +467,15 @@ contract TreasuryBaseFacetV2 is ITreasury, WithStorage {
         return ts().CREQ;
     }
 
-    function authority() public view returns (IAuthority) {
-        return ts().authority;
+    function newFunction() public pure returns (uint256) {
+        return 7;
+    }
+
+    function setNewValue(uint256 _newVal) public {
+        ns().addedValue = _newVal;
+    }
+
+    function newValue() public view returns (uint256) {
+        return ns().addedValue;
     }
 }
