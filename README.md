@@ -20,13 +20,12 @@ The `scripts/deploy.js` file shows how to deploy a diamond.
 
 The `test/diamondTest.js` file gives tests for the `diamondCut` function and the Diamond Loupe functions.
 
-## How to Get Started Making Your Diamond
+## Core functions
 
-1. Reading and understand [EIP-2535 Diamonds](https://github.com/ethereum/EIPs/issues/2535). If something is unclear let me know!
+1. Deposit assets - there are no restrictions except for the asset providing a balance function
 
-2. Use a diamond reference implementation. You are at the right place because this is the README for a diamond reference implementation.
+2. Issue asset-backed Requiem tokens in exchange for other assets
 
-This diamond implementation is boilerplate code that makes a diamond compliant with EIP-2535 Diamonds.
 
 Specifically you can copy and use the [DiamondCutFacet.sol](./contracts/facets/DiamondCutFacet.sol) and [DiamondLoupeFacet.sol](./contracts/facets/DiamondLoupeFacet.sol) contracts. They implement the `diamondCut` function and the loupe functions.
 
@@ -34,9 +33,11 @@ The [Diamond.sol](./contracts/Diamond.sol) contract could be used as is, or it c
 
 The [LibDiamond.sol](./contracts/libraries/LibDiamond.sol) library could be used as is. It shows how to implement Diamond Storage. This contract includes contract ownership which you might want to change if you want to implement DAO-based ownership or other form of contract ownership. Go for it. Diamonds can work with any kind of contract ownership strategy. This library contains an internal function version of `diamondCut` that can be used in the constructor of a diamond or other places.
 
-## Calling Diamond Functions
+## Calling Treasury Functions
 
-In order to call a function that exists in a diamond you need to use the ABI information of the facet that has the function.
+For most block explorers, calls from their provided site will not work as the Diamond itself uses the fallback function which then delegates the call to another address - the respective facet. Calling facet fonctions manually will do nothing as these contracts have no own storage.
+
+The app will later provide a subdomain where the overview of functions is displayed. That will also be shown in the docs.
 
 
 ## Author
