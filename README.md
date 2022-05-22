@@ -1,4 +1,4 @@
-![image](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-finance-column.svg | widh = 400)
+![image](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-finance-column.svg | width = 400)
 
 # Implementation of Requiem Finance Treasury using an Upgradeable Diamond
 
