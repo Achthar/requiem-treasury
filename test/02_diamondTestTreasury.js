@@ -53,8 +53,8 @@ describe('DiamondTestTreasury', async function () {
     diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress)
     diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress)
     ownershipFacet = await ethers.getContractAt('OwnershipFacet', diamondAddress)
-    treasuryFacet = await ethers.getContractAt('TreasuryBaseFacet', diamondAddress)
-    treasuryFacetV2 = await ethers.getContractAt('TreasuryBaseFacetV2', diamondAddress)
+    treasuryFacet = await ethers.getContractAt('TreasuryFacet', diamondAddress)
+    treasuryFacetV2 = await ethers.getContractAt('TreasuryFacetV2', diamondAddress)
     mockREQ = await ethers.getContractAt('MockREQ', mockREQAddress)
     const MockDAI = await ethers.getContractFactory('MockERC20')
     mockDAI = await MockDAI.deploy('DAI', 'DAI Stablecoin', 18)
@@ -246,7 +246,7 @@ describe('DiamondTestTreasury', async function () {
   })
 
   it('should replace all functions and add some', async () => {
-    const treasuryV2Facet = await ethers.getContractFactory('TreasuryBaseFacetV2')
+    const treasuryV2Facet = await ethers.getContractFactory('TreasuryFacetV2')
     const treasuryV2FacetContract = await treasuryV2Facet.deploy()
     const oldSelectors = getSelectors(treasuryFacet)
     const selectorsNew = getSelectors(treasuryV2Facet).filter(function (x) { return !oldSelectors.includes(x) })

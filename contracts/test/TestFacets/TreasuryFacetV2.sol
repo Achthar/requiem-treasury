@@ -10,7 +10,7 @@ import "../../interfaces/ICreditREQ.sol";
 import "../../interfaces/IAssetPricer.sol";
 import "../../interfaces/ITreasury.sol";
 
-contract TreasuryBaseFacetV2 is ITreasury, WithStorage {
+contract TreasuryFacetV2 is ITreasury, WithStorage {
     using SafeERC20 for IERC20;
 
     /* ========== EVENTS ========== */

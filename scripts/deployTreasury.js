@@ -4,7 +4,7 @@
 const { getSelectors, FacetCutAction } = require('./libraries/diamond.js')
 
 const abiDecoder = require('abi-decoder')
-const TreasuryArtifact = require('../artifacts/contracts/facets/TreasuryBaseFacet.sol/TreasuryBaseFacet.json')
+const TreasuryArtifact = require('../artifacts/contracts/facets/TreasuryFacet.sol/TreasuryFacet.json')
 const DiamondLoupeArtifact = require('../artifacts/contracts/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json')
 const OwenershipArtifact = require('../artifacts/contracts/facets/OwnershipFacet.sol/OwnershipFacet.json')
 const { ethers } = require('hardhat')
@@ -49,7 +49,7 @@ async function deployDiamond() {
   const FacetNames = [
     'DiamondLoupeFacet',
     'OwnershipFacet',
-    'TreasuryBaseFacet'
+    'TreasuryFacet'
   ]
   const cut = []
   for (const FacetName of FacetNames) {
