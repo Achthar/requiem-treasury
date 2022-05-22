@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../libraries/LibStorageV2.sol";
-import "../libraries/SafeERC20.sol";
+import "../MockUpgrade/LibStorageV2.sol";
+import "../../utils/SafeERC20.sol";
 
-import "../interfaces/IERC20.sol";
-import "../interfaces/IERC20Metadata.sol";
-import "../interfaces/ICreditREQ.sol";
-import "../interfaces/IAssetPricer.sol";
-import "../interfaces/ITreasury.sol";
+import "../../interfaces/IERC20.sol";
+import "../../interfaces/IERC20Metadata.sol";
+import "../../interfaces/ICreditREQ.sol";
+import "../../interfaces/IAssetPricer.sol";
+import "../../interfaces/ITreasury.sol";
 
 contract TreasuryBaseFacetV2 is ITreasury, WithStorage {
     using SafeERC20 for IERC20;

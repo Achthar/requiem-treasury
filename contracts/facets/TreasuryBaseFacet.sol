@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "../libraries/LibStorage.sol";
-import "../libraries/SafeERC20.sol";
+import "../utils/SafeERC20.sol";
 
 import "../interfaces/IERC20.sol";
 import "../interfaces/IERC20Metadata.sol";
@@ -14,20 +14,15 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     using SafeERC20 for IERC20;
 
     /* ========== EVENTS ========== */
-    event Deposit(address indexed token, uint256 amount, uint256 value);
-    event Withdrawal(address indexed token, uint256 amount, uint256 value);
-    event CreateDebt(address indexed debtor, address indexed token, uint256 amount, uint256 value);
-    event RepayDebt(address indexed debtor, address indexed token, uint256 amount, uint256 value);
-    event Managed(address indexed token, uint256 amount);
+    event Deposit(address indexed asset, uint256 amount, uint256 value);
+    event Withdrawal(address indexed asset, uint256 amount, uint256 value);
+    event CreateDebt(address indexed debtor, address indexed asset, uint256 amount, uint256 value);
+    event RepayDebt(address indexed debtor, address indexed asset, uint256 amount, uint256 value);
+    event Managed(address indexed asset, uint256 amount);
     event ReservesAudited(uint256 indexed totalReserves);
     event Minted(address indexed caller, address indexed recipient, uint256 amount);
     event PermissionQueued(uint256 indexed status, address queued);
     event Permissioned(address addr, uint256 indexed status, bool result);
-
-    string internal notAccepted = "Treasury: not accepted";
-    string internal notApproved = "Treasury: not approved";
-    string internal invalidAsset = "Treasury: invalid asset";
-    string internal insufficientReserves = "Treasury: insufficient reserves";
 
     // administrative
     modifier onlyGovernor() {
@@ -45,31 +40,31 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     /**
      * @notice allow approved address to deposit an asset for ts().REQ
      * @param _amount uint256
-     * @param _token address
+     * @param _asset address
      * @param _profit uint256
      * @return send_ uint256
      */
     function deposit(
         uint256 _amount,
-        address _token,
+        address _asset,
         uint256 _profit
     ) external override returns (uint256 send_) {
-        if (ts().permissions[1][_token]) {
-            require(ts().permissions[0][msg.sender], notApproved);
+        if (ts().permissions[1][_asset]) {
+            require(ts().permissions[0][msg.sender], "Treasury: not approved");
         } else {
-            revert(invalidAsset);
+            revert( "Treasury: invalid asset");
         }
 
-        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(_asset).safeTransferFrom(msg.sender, address(this), _amount);
 
-        uint256 value = assetValue(_token, _amount);
+        uint256 value = assetValue(_asset, _amount);
         // mint needed and store amount of rewards for distribution
         send_ = value - _profit;
         ts().REQ.mint(msg.sender, send_);
 
         ts().totalReserves += value;
 
-        emit Deposit(_token, _amount, value);
+        emit Deposit(_asset, _amount, value);
     }
 
     /**
@@ -78,8 +73,8 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _asset address
      */
     function withdraw(uint256 _amount, address _asset) external override {
-        require(ts().permissions[1][_asset], notAccepted); // Only reserves can be used for redemptions
-        require(ts().permissions[2][msg.sender], notApproved);
+        require(ts().permissions[1][_asset], "Treasury: not accepted");
+        require(ts().permissions[2][msg.sender], "Treasury: not approved");
 
         uint256 value = assetValue(_asset, _amount);
         ts().REQ.burnFrom(msg.sender, value);
@@ -97,11 +92,11 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function manage(address _asset, uint256 _amount) external override {
-        require(ts().permissions[2][msg.sender], notApproved);
+        require(ts().permissions[2][msg.sender], "Treasury: not approved");
 
         if (ts().permissions[1][_asset]) {
             uint256 value = assetValue(_asset, _amount);
-            if (ts().useExcessReserves) require(int256(value) <= excessReserves(), insufficientReserves);
+            if (ts().useExcessReserves) require(int256(value) <= excessReserves(), "Treasury: insufficient reserves");
 
             ts().totalReserves -= value;
         }
@@ -115,8 +110,8 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function mint(address _recipient, uint256 _amount) external override {
-        require(ts().permissions[3][msg.sender], notApproved);
-        if (ts().useExcessReserves) require(int256(_amount) <= excessReserves(), insufficientReserves);
+        require(ts().permissions[3][msg.sender], "Treasury: not approved");
+        if (ts().useExcessReserves) require(int256(_amount) <= excessReserves(), "Treasury: insufficient reserves");
 
         ts().REQ.mint(_recipient, _amount);
         emit Minted(msg.sender, _recipient, _amount);
@@ -135,47 +130,47 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     /**
      * @notice allow approved address to borrow reserves
      * @param _amount uint256
-     * @param _token address
+     * @param _asset address
      */
-    function incurDebt(uint256 _amount, address _token) external override {
+    function incurDebt(uint256 _amount, address _asset) external override {
         uint256 value;
-        require(ts().permissions[5][msg.sender], notApproved);
+        require(ts().permissions[5][msg.sender], "Treasury: not approved");
 
-        if (_token == address(ts().REQ)) {
+        if (_asset == address(ts().REQ)) {
             value = _amount;
         } else {
-            value = assetValue(_token, _amount);
+            value = assetValue(_asset, _amount);
         }
-        require(value != 0, invalidAsset);
+        require(value != 0,  "Treasury: invalid asset");
 
         ts().CREQ.changeDebt(value, msg.sender, true);
         require(ts().CREQ.debtBalances(msg.sender) <= ts().debtLimits[msg.sender], "Treasury: exceeds limit");
         ts().totalDebt += value;
 
-        if (_token == address(ts().REQ)) {
+        if (_asset == address(ts().REQ)) {
             ts().REQ.mint(msg.sender, value);
             ts().reqDebt += value;
         } else {
             ts().totalReserves -= value;
-            IERC20(_token).safeTransfer(msg.sender, _amount);
+            IERC20(_asset).safeTransfer(msg.sender, _amount);
         }
-        emit CreateDebt(msg.sender, _token, _amount, value);
+        emit CreateDebt(msg.sender, _asset, _amount, value);
     }
 
     /**
      * @notice allow approved address to repay borrowed reserves with reserves
      * @param _amount uint256
-     * @param _token address
+     * @param _asset address
      */
-    function repayDebtWithReserve(uint256 _amount, address _token) external override {
-        require(ts().permissions[5][msg.sender], notApproved);
-        require(ts().permissions[1][_token], notAccepted);
-        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-        uint256 value = assetValue(_token, _amount);
+    function repayDebtWithReserve(uint256 _amount, address _asset) external override {
+        require(ts().permissions[5][msg.sender], "Treasury: not approved");
+        require(ts().permissions[1][_asset], "Treasury: not accepted");
+        IERC20(_asset).safeTransferFrom(msg.sender, address(this), _amount);
+        uint256 value = assetValue(_asset, _amount);
         ts().CREQ.changeDebt(value, msg.sender, false);
         ts().totalDebt -= value;
         ts().totalReserves += value;
-        emit RepayDebt(msg.sender, _token, _amount, value);
+        emit RepayDebt(msg.sender, _asset, _amount, value);
     }
 
     /**
@@ -183,7 +178,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
      * @param _amount uint256
      */
     function repayDebtWithREQ(uint256 _amount) external {
-        require(ts().permissions[5][msg.sender], notApproved);
+        require(ts().permissions[5][msg.sender], "Treasury: not approved");
         ts().REQ.burnFrom(msg.sender, _amount);
         ts().CREQ.changeDebt(_amount, msg.sender, false);
         ts().totalDebt -= _amount;
@@ -327,7 +322,6 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
         require(block.number >= info.timelockEnd, "Timelock not complete");
 
         if (info.managing == 7) {
-            // 9
             ts().CREQ = ICreditREQ(info.toPermit);
         } else {
             ts().permissions[info.managing][info.toPermit] = true;
@@ -383,7 +377,7 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
     /* ========== VIEW FUNCTIONS ========== */
 
     /**
-     * @notice returns excess reserves not backing tokens
+     * @notice returns excess reserves not backing assets
      * @return int
      */
     function excessReserves() public view returns (int256) {
@@ -392,15 +386,15 @@ contract TreasuryBaseFacet is ITreasury, WithStorage {
 
     /**
      * @notice returns REQ valuation of asset
-     * @param _token address
+     * @param _asset address
      * @param _amount uint256
      * @return value_ uint256
      */
-    function assetValue(address _token, uint256 _amount) public view override returns (uint256 value_) {
-        if (ts().permissions[1][_token]) {
-            value_ = IAssetPricer(ts().assetPricer[_token]).valuation(_token, _amount);
+    function assetValue(address _asset, uint256 _amount) public view override returns (uint256 value_) {
+        if (ts().permissions[1][_asset]) {
+            value_ = IAssetPricer(ts().assetPricer[_asset]).valuation(_asset, _amount);
         } else {
-            revert(invalidAsset);
+            revert( "Treasury: invalid asset");
         }
     }
 

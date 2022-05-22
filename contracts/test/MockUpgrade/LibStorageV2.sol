@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "../interfaces/IREQ.sol";
-import "../interfaces/ICreditREQ.sol";
-import "./LibDiamond.sol";
+import "../../interfaces/IREQ.sol";
+import "../../interfaces/ICreditREQ.sol";
+import "../../libraries/LibDiamond.sol";
 
 // enum here jsut for reference - uint256 used for upgradability
 // enum STATUS {

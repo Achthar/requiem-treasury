@@ -9,7 +9,7 @@ const {
 
 const { deployDiamond } = require('../scripts/deployTreasury.js')
 
-const { assert } = require('chai')
+const { assert, expect } = require('chai')
 const { ethers } = require('hardhat')
 const { parseUnits } = require('ethers/lib/utils')
 
@@ -25,9 +25,13 @@ describe('DiamondTestTreasury', async function () {
   let result
   let mockREQ
   let mockDAI
+  let mockAsset
   let mockAssetPricer
   const addresses = []
   let contractOwner
+  let otherAccount
+  let Depo
+  let depo
 
   // enum STATUS {
   //     ASSETDEPOSITOR, =0
@@ -43,6 +47,7 @@ describe('DiamondTestTreasury', async function () {
   before(async function () {
     const accounts = await ethers.getSigners()
     contractOwner = accounts[0]
+    otherAccount = accounts[1]
     const [_diamondAddress, mockREQAddress] = await deployDiamond()
     diamondAddress = _diamondAddress
     diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress)
@@ -54,10 +59,19 @@ describe('DiamondTestTreasury', async function () {
     const MockDAI = await ethers.getContractFactory('MockERC20')
     mockDAI = await MockDAI.deploy('DAI', 'DAI Stablecoin', 18)
 
+    const MockAsset = await ethers.getContractFactory('MockERC20')
+    mockAsset = await MockAsset.deploy('ASSET', 'Asset', 8)
+    await mockAsset.mint(contractOwner.address, parseUnits('10000', 8))
+
     const MockPricer = await ethers.getContractFactory('MockAssetPricer')
     mockAssetPricer = await MockPricer.deploy(mockREQ.address, parseUnits('5', 18))
 
     await mockDAI.mint(contractOwner.address, ethers.utils.parseUnits('1000000', 18))
+
+    await mockAsset.mint(otherAccount.address, ethers.utils.parseUnits('1000000', 18))
+
+    Depo = await ethers.getContractFactory('MockDepo')
+    depo = await Depo.deploy(diamondAddress)
 
 
   })
@@ -115,11 +129,6 @@ describe('DiamondTestTreasury', async function () {
   })
 
   it('allows regular queuing', async () => {
-    console.log("ARGS",
-      0, // asset depositor
-      contractOwner.address,
-      mockAssetPricer.address
-    )
     await treasuryFacet.queueTimelock(
       0, // asset depositor
       contractOwner.address,
@@ -130,6 +139,110 @@ describe('DiamondTestTreasury', async function () {
 
     const entr = await treasuryFacet.permissions(0, contractOwner.address)
     assert.equal(entr, true)
+
+    await treasuryFacet.queueTimelock(
+      1, // asset
+      mockAsset.address,
+      mockAssetPricer.address
+    )
+
+    await treasuryFacet.execute(1)
+
+    const isAsset = await treasuryFacet.permissions(1, mockAsset.address)
+    assert.equal(isAsset, true)
+
+    const calculator = await treasuryFacet.assetPricer(mockAsset.address)
+    assert.equal(calculator, mockAssetPricer.address)
+
+    await treasuryFacet.queueTimelock(
+      3, // rewardmanger
+      depo.address,
+      ethers.constants.AddressZero
+    )
+
+    await treasuryFacet.execute(2)
+
+    const rewarder = await treasuryFacet.permissions(3, depo.address)
+    assert.equal(rewarder, true)
+
+    const toDeposit = parseUnits('12', 7)
+    await mockAsset.approve(depo.address, ethers.constants.MaxUint256)
+    await depo.mintREQFor(mockAsset.address, toDeposit)
+    const assetAm = await mockAsset.balanceOf(diamondAddress)
+    assert.equal(assetAm.toString(), toDeposit.toString())
+    const reqVal = await treasuryFacet.assetValue(mockAsset.address, toDeposit)
+    const reqBal = await mockREQ.balanceOf(contractOwner.address)
+    assert.equal(reqVal.toString(), reqBal.toString())
+
+  })
+
+
+  it('rejects invalid user queue', async () => {
+    await expect(treasuryFacet.connect(otherAccount).queueTimelock(
+      2, // assetmanager
+      otherAccount.address,
+      ethers.constants.AddressZero
+    )
+    ).to.be.revertedWith("Treasury: Must be governor")
+  })
+
+  it('rejects invalid deposit', async () => {
+    await expect(treasuryFacet.deposit('10', mockDAI.address, '100')).to.be.revertedWith("Treasury: invalid asset")
+  })
+
+
+  it('rejects unauthorized mints', async () => {
+    await expect(treasuryFacet.mint(contractOwner.address, '100')).to.be.revertedWith("Treasury: not approved")
+  })
+
+  it('rejects unauthorized deposits', async () => {
+    await expect(depo.depositForREQ(mockAsset.address, '10')).to.be.revertedWith("Treasury: not approved")
+  })
+
+  it('rejects unauthorized withdraws regards to user', async () => {
+    await expect(treasuryFacet.withdraw('10', mockAsset.address)).to.be.revertedWith("Treasury: not approved")
+
+  })
+
+  it('rejects unauthorized withdraws regards to asset', async () => {
+    await expect(treasuryFacet.connect(otherAccount).withdraw('10', mockDAI.address)).to.be.revertedWith("Treasury: not accepted")
+
+  })
+
+
+  it('can withdraw if approved', async () => {
+
+    await treasuryFacet.queueTimelock(
+      0, // depositor
+      otherAccount.address,
+      ethers.constants.AddressZero
+    )
+
+    await treasuryFacet.execute(3)
+    await mockAsset.connect(otherAccount).approve(diamondAddress, ethers.constants.MaxUint256)
+
+    const valuation = await treasuryFacet.assetValue(mockAsset.address, '1000')
+
+    await treasuryFacet.connect(otherAccount).deposit('1000', mockAsset.address, 0)
+
+    const retVal = await mockREQ.balanceOf(otherAccount.address)
+
+    expect(retVal).to.equal(valuation)
+  })
+
+  it('can withdraw if approved', async () => {
+
+    await treasuryFacet.queueTimelock(
+      2, // assetmanager
+      otherAccount.address,
+      ethers.constants.AddressZero
+    )
+
+    await treasuryFacet.execute(4)
+
+    await mockREQ.connect(otherAccount).approve(treasuryFacet.address, ethers.constants.MaxUint256)
+
+    await treasuryFacet.connect(otherAccount).withdraw('10', mockAsset.address)
   })
 
   it('should replace all functions and add some', async () => {
