@@ -1,4 +1,4 @@
-![]([https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-column.svg) | width=100)
+![](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-column.svg | width=100)
 
 # Implementation of Requiem Finance Treasury using a Diamond Implementation
 
