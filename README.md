@@ -1,6 +1,6 @@
-![image](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-finance-column.svg)
+![image](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-finance-column.svg | widh = 400)
 
-# Implementation of Requiem Finance Treasury using a Diamond Implementation
+# Implementation of Requiem Finance Treasury using an Upgradeable Diamond
 
 The implementation of Requiemm's Treasury uses [EIP-2535 Diamond Standard](https://github.com/ethereum/EIPs/issues/2535) derived from https://github.com/mudgen/diamond. 
 
