@@ -1,4 +1,4 @@
-![](https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-column.svg | width=100)
+<img src="(https://requiem-finance.s3.eu-west-2.amazonaws.com/logos/requiem/requiem-column.svg"width="200" height="200%" />
 
 # Implementation of Requiem Finance Treasury using a Diamond Implementation
 
