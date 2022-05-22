@@ -10,6 +10,7 @@ const {
 const { deployDiamond } = require('../scripts/deployTreasury.js')
 
 const { assert } = require('chai')
+const { ethers } = require('hardhat')
 
 describe('DiamondTestTreasury', async function () {
   let diamondAddress
@@ -20,14 +21,25 @@ describe('DiamondTestTreasury', async function () {
   let tx
   let receipt
   let result
+  let mockREQ
+  let mockDAI
   const addresses = []
+  let contractOwner
 
   before(async function () {
-    diamondAddress = await deployDiamond()
+    const accounts = await ethers.getSigners()
+    contractOwner = accounts[0]
+    const [_diamondAddress, mockREQAddress] = await deployDiamond()
+    diamondAddress = _diamondAddress
     diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress)
     diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress)
     ownershipFacet = await ethers.getContractAt('OwnershipFacet', diamondAddress)
     treasuryFacet = await ethers.getContractAt('TreasuryBaseFacet', diamondAddress)
+    mockREQ = await ethers.getContractAt('MockREQ', mockREQAddress)
+    const MockDAI = await ethers.getContractFactory('MockERC20')
+    mockDAI = await MockDAI.deploy('DAI', 'DAI Stablecoin', 18)
+
+    await mockDAI.mint(contractOwner.address, ethers.utils.parseUnits('1000000', 18))
 
 
   })
@@ -72,32 +84,17 @@ describe('DiamondTestTreasury', async function () {
       addresses[2],
       await diamondLoupeFacet.facetAddress('0xf2fde38b')
     )
+    assert.equal(
+      addresses[3],
+      await diamondLoupeFacet.facetAddress('0x40c10f19')
+    )
   })
 
-  it('should add test1 functions', async () => {
-    const Test1Facet = await ethers.getContractFactory('Test1Facet')
-    const test1Facet = await Test1Facet.deploy()
-    await test1Facet.deployed()
-    addresses.push(test1Facet.address)
-    const selectors = getSelectors(test1Facet).remove(['supportsInterface(bytes4)'])
-    tx = await diamondCutFacet.diamondCut(
-      [{
-        facetAddress: test1Facet.address,
-        action: FacetCutAction.Add,
-        functionSelectors: selectors
-      }],
-      ethers.constants.AddressZero, '0x', { gasLimit: 800000 })
-    receipt = await tx.wait()
-    if (!receipt.status) {
-      throw Error(`Diamond upgrade failed: ${tx.hash}`)
-    }
-    result = await diamondLoupeFacet.facetFunctionSelectors(test1Facet.address)
-    assert.sameMembers(result, selectors)
-  })
 
-  it('should test function call', async () => {
-    const test1Facet = await ethers.getContractAt('Test1Facet', diamondAddress)
-    await test1Facet.test1Func10()
+  it('has initialized values', async () => {
+    const reqAddr = await treasuryFacet.REQ()
+    assert.equal(reqAddr, mockREQ.address)
+    console.log("DAT")
   })
 
   it('should replace supportsInterface function', async () => {
@@ -117,27 +114,6 @@ describe('DiamondTestTreasury', async function () {
     }
     result = await diamondLoupeFacet.facetFunctionSelectors(testFacetAddress)
     assert.sameMembers(result, getSelectors(Test1Facet))
-  })
-
-  it('should add test2 functions', async () => {
-    const Test2Facet = await ethers.getContractFactory('Test2Facet')
-    const test2Facet = await Test2Facet.deploy()
-    await test2Facet.deployed()
-    addresses.push(test2Facet.address)
-    const selectors = getSelectors(test2Facet)
-    tx = await diamondCutFacet.diamondCut(
-      [{
-        facetAddress: test2Facet.address,
-        action: FacetCutAction.Add,
-        functionSelectors: selectors
-      }],
-      ethers.constants.AddressZero, '0x', { gasLimit: 800000 })
-    receipt = await tx.wait()
-    if (!receipt.status) {
-      throw Error(`Diamond upgrade failed: ${tx.hash}`)
-    }
-    result = await diamondLoupeFacet.facetFunctionSelectors(test2Facet.address)
-    assert.sameMembers(result, selectors)
   })
 
   it('should remove some test2 functions', async () => {

@@ -7,6 +7,7 @@ const abiDecoder = require('abi-decoder')
 const TreasuryArtifact = require('../artifacts/contracts/facets/TreasuryBaseFacet.sol/TreasuryBaseFacet.json')
 const DiamondLoupeArtifact = require('../artifacts/contracts/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json')
 const OwenershipArtifact = require('../artifacts/contracts/facets/OwnershipFacet.sol/OwnershipFacet.json')
+const { ethers } = require('hardhat')
 
 async function deployDiamond() {
 
@@ -20,6 +21,9 @@ async function deployDiamond() {
   // deploy DiamondCutFacet
   const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
   const diamondCutFacet = await DiamondCutFacet.deploy()
+
+  const MockREQ = await ethers.getContractFactory('MockREQ')
+  const mockREQ = await MockREQ.deploy()
 
   await diamondCutFacet.deployed()
   console.log('DiamondCutFacet deployed:', diamondCutFacet.address)
@@ -36,6 +40,7 @@ async function deployDiamond() {
   const TreasuryInit = await ethers.getContractFactory('TreasuryInit')
   const treasuryInit = await TreasuryInit.deploy()
   await treasuryInit.deployed()
+
   console.log('DiamondInit deployed:', treasuryInit.address)
 
   // deploy facets
@@ -68,9 +73,6 @@ async function deployDiamond() {
   let tx
   let receipt
 
-  const MockREQ = await ethers.getContractFactory('MockREQ')
-  const mockREQ = await MockREQ.deploy()
-
   // call to init function
   let functionCall = treasuryInit.interface.encodeFunctionData('init', [contractOwner.address, mockREQ.address, mockREQ.address])
   tx = await diamondCut.diamondCut(cut, treasuryInit.address, functionCall)
@@ -80,7 +82,7 @@ async function deployDiamond() {
     throw Error(`Diamond upgrade failed: ${tx.hash}`)
   }
   console.log('Completed diamond cut')
-  return diamond.address
+  return [diamond.address, mockREQ.address]
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -38,7 +38,7 @@ struct TreasuryStorage {
     mapping(uint256 => address[]) registry;
     mapping(uint256 => mapping(address => bool)) permissions;
     mapping(address => address) assetPricer;
-    mapping(address => uint256) debtLimit;
+    mapping(address => uint256) debtLimits;
     // asset data
     mapping(address => uint256) assetReserves;
     mapping(address => uint256) assetDebt;
@@ -55,7 +55,7 @@ struct TreasuryStorage {
 }
 
 /**
- * All of Requiems's game storage is stored in a single TreasuryStorage struct.
+ * All of Requiems's treasury storage is stored in a single TreasuryStorage struct.
  *
  * The Diamond Storage pattern (https://dev.to/mudgen/how-diamond-storage-works-90e)
  * is used to set the struct at a specific place in contract storage. The pattern
@@ -98,7 +98,7 @@ struct TreasuryStorage {
  * https://medium.com/1milliondevs/new-storage-layout-for-proxy-contracts-and-diamonds-98d01d0eadb#bfc1
  */
 library LibStorage {
-    // Storage are structs where the data gets updated throughout the lifespan of the game
+    // Storage are structs where the data gets updated throughout the lifespan of the project
     bytes32 constant TREASURY_STORAGE = keccak256("requiem.storage.treasury");
 
     // Treasury access control
