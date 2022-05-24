@@ -49,7 +49,7 @@ struct TreasuryStorage {
     uint256 totalDebt;
     uint256 reqDebt;
     
-    uint256 blocksNeededForQueue;
+    uint256 timeNeededForQueue;
     bool timelockEnabled;
     bool useExcessReserves;
     uint256 onChainGovernanceTimelock;

@@ -49,7 +49,7 @@ contract TreasuryInit is WithStorage {
         require(_req != address(0), "Zero address: REQ");
         ts.REQ = IREQ(_req);
         ts.timelockEnabled = true;
-        ts.blocksNeededForQueue = 0;
+        ts.timeNeededForQueue = 0;
         ts.useExcessReserves = false;
         ts.CREQ = ICreditREQ(_creq);
 

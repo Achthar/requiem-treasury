@@ -36,7 +36,7 @@ struct Queue {
 
 // Helper library to enable upgradeable queuing
 // It just uses the current state of the queue storage and parses it to
-// the Queue struct above - which avoids using arrays or mappings of structs 
+// the Queue struct above - which avoids using arrays or mappings of structs
 // Gas cost is not too important here as these are only uses in rare cases
 library QueueStorageLib {
     function push(QueueStorage storage self, Queue memory newEntry) internal {
@@ -355,9 +355,9 @@ contract TreasuryFacet is ITreasury, WithStorage {
     ) external onlyGovernor {
         require(_address != address(0));
         require(ts().timelockEnabled, "Timelock is disabled, use enable");
-        uint256 timelock = block.number + ts().blocksNeededForQueue;
+        uint256 timelock = block.timestamp + ts().timeNeededForQueue;
         if (_status == 2) {
-            timelock = block.number + ts().blocksNeededForQueue * 2;
+            timelock = block.timestamp + ts().timeNeededForQueue * 2;
         }
         qs().push(Queue({managing: _status, toPermit: _address, calculator: _calculator, timelockEnd: timelock, nullify: false, executed: false}));
         emit PermissionQueued(_status, _address);
@@ -374,7 +374,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
 
         require(!info.nullify, "Action has been nullified");
         require(!info.executed, "Action has already been executed");
-        require(block.number >= info.timelockEnd, "Timelock not complete");
+        require(block.timestamp >= info.timelockEnd, "Timelock not complete");
 
         if (info.managing == 7) {
             ts().CREQ = ICreditREQ(info.toPermit);
@@ -413,20 +413,20 @@ contract TreasuryFacet is ITreasury, WithStorage {
      */
     function disableTimelock() external onlyGovernor {
         require(ts().timelockEnabled, "timelock already disabled");
-        if (ts().onChainGovernanceTimelock != 0 && ts().onChainGovernanceTimelock <= block.number) {
+        if (ts().onChainGovernanceTimelock != 0 && ts().onChainGovernanceTimelock <= block.timestamp) {
             ts().timelockEnabled = false;
         } else {
-            ts().onChainGovernanceTimelock = block.number + ts().blocksNeededForQueue * 7; // 7-day timelock
+            ts().onChainGovernanceTimelock = block.timestamp + ts().timeNeededForQueue * 7; // 7-day timelock
         }
     }
 
     /**
      * @notice enables timelocks after initilization
      */
-    function enableTimelock(uint256 _blocksNeededForQueue) external onlyGovernor {
+    function enableTimelock(uint256 _timeNeededForQueue) external onlyGovernor {
         require(!ts().timelockEnabled, "timelock already enabled");
         ts().timelockEnabled = true;
-        ts().blocksNeededForQueue = _blocksNeededForQueue;
+        ts().timeNeededForQueue = _timeNeededForQueue;
     }
 
     /* ========== VIEW FUNCTIONS ========== */
