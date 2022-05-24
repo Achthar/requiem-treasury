@@ -10,9 +10,9 @@ import "../interfaces/ICreditREQ.sol";
 import "../interfaces/IAssetPricer.sol";
 import "../interfaces/ITreasury.sol";
 
-
+// the managing / status input is coded as follows:
 // enum STATUS {
-//     ASSETDEPOSITOR, =0
+//     ASSETDEPOSITOR, = 0
 //     ASSET, = 1
 //     ASSETMANAGER, = 2
 //     REWARDMANAGER, = 3
@@ -22,8 +22,9 @@ import "../interfaces/ITreasury.sol";
 //     CREQ = 7
 // }
 
-// Local Queue struct outside of LibStorage to keep upgradability
-// managing uses the indexing according to the commented enum above
+// Local Queue struct outside of LibStorage to keep upgradeability
+// The managing field uses the indexing according to the commented enum above
+// We use uint256 as enums are not upgradeable.
 struct Queue {
     uint256 managing;
     address toPermit;
