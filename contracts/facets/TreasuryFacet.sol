@@ -10,8 +10,64 @@ import "../interfaces/ICreditREQ.sol";
 import "../interfaces/IAssetPricer.sol";
 import "../interfaces/ITreasury.sol";
 
+
+// enum STATUS {
+//     ASSETDEPOSITOR, =0
+//     ASSET, = 1
+//     ASSETMANAGER, = 2
+//     REWARDMANAGER, = 3
+//     DEBTMANAGER, = 4
+//     DEBTOR, = 5
+//     COLLATERAL, = 6
+//     CREQ = 7
+// }
+
+// Local Queue struct outside of LibStorage to keep upgradability
+// managing uses the indexing according to the commented enum above
+struct Queue {
+    uint256 managing;
+    address toPermit;
+    address calculator;
+    uint256 timelockEnd;
+    bool nullify;
+    bool executed;
+}
+
+// Helper library to enable upgradeable queuing
+// It just uses the current state of the queue storage and parses it to
+// the Queue struct above - which avoids using arrays or mappings of structs 
+// Gas cost is not too important here as these are only uses in rare cases
+library QueueStorageLib {
+    function push(QueueStorage storage self, Queue memory newEntry) internal {
+        uint256 newIndex = self.currentIndex + 1;
+        self.currentIndex = newIndex;
+        self.managing[newIndex] = newEntry.managing;
+        self.toPermit[newIndex] = newEntry.toPermit;
+        self.calculator[newIndex] = newEntry.calculator;
+        self.timelockEnd[newIndex] = newEntry.timelockEnd;
+        self.nullify[newIndex] = newEntry.nullify;
+        self.executed[newIndex] = newEntry.executed;
+    }
+
+    function get(QueueStorage storage self, uint256 _index) internal view returns (Queue memory) {
+        require(_index <= self.currentIndex && _index > 0, "Queue: Invalid index");
+        return
+            Queue(
+                self.managing[_index],
+                self.toPermit[_index],
+                self.calculator[_index],
+                self.timelockEnd[_index],
+                self.nullify[_index],
+                self.executed[_index]
+            );
+    }
+}
+
+// The treasury facet that contains the logic that changes the storage
+// Aligned with EIP-2535, the contract has no constructor or an own state
 contract TreasuryFacet is ITreasury, WithStorage {
     using SafeERC20 for IERC20;
+    using QueueStorageLib for QueueStorage;
 
     /* ========== EVENTS ========== */
     event Deposit(address indexed asset, uint256 amount, uint256 value);
@@ -52,7 +108,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         if (ts().permissions[1][_asset]) {
             require(ts().permissions[0][msg.sender], "Treasury: not approved");
         } else {
-            revert( "Treasury: invalid asset");
+            revert("Treasury: invalid asset");
         }
 
         IERC20(_asset).safeTransferFrom(msg.sender, address(this), _amount);
@@ -141,7 +197,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         } else {
             value = assetValue(_asset, _amount);
         }
-        require(value != 0,  "Treasury: invalid asset");
+        require(value != 0, "Treasury: invalid asset");
 
         ts().CREQ.changeDebt(value, msg.sender, true);
         require(ts().CREQ.debtBalances(msg.sender) <= ts().debtLimits[msg.sender], "Treasury: exceeds limit");
@@ -302,9 +358,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         if (_status == 2) {
             timelock = block.number + ts().blocksNeededForQueue * 2;
         }
-        ts().permissionQueue.push(
-            Queue({managing: _status, toPermit: _address, calculator: _calculator, timelockEnd: timelock, nullify: false, executed: false})
-        );
+        qs().push(Queue({managing: _status, toPermit: _address, calculator: _calculator, timelockEnd: timelock, nullify: false, executed: false}));
         emit PermissionQueued(_status, _address);
     }
 
@@ -315,7 +369,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
     function execute(uint256 _index) external {
         require(ts().timelockEnabled == true, "Timelock is disabled, use enable");
 
-        Queue memory info = ts().permissionQueue[_index];
+        Queue memory info = qs().get(_index);
 
         require(!info.nullify, "Action has been nullified");
         require(!info.executed, "Action has already been executed");
@@ -341,7 +395,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
                 }
             }
         }
-        ts().permissionQueue[_index].executed = true;
+        qs().executed[_index] = true;
         emit Permissioned(info.toPermit, info.managing, true);
     }
 
@@ -350,7 +404,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
      * @param _index uint256
      */
     function nullify(uint256 _index) external onlyGovernor {
-        ts().permissionQueue[_index].nullify = true;
+        qs().nullify[_index] = true;
     }
 
     /**
@@ -394,7 +448,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         if (ts().permissions[1][_asset]) {
             value_ = IAssetPricer(ts().assetPricer[_asset]).valuation(_asset, _amount);
         } else {
-            revert( "Treasury: invalid asset");
+            revert("Treasury: invalid asset");
         }
     }
 
@@ -438,7 +492,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
     }
 
     function permissionQueue(uint256 _index) public view returns (Queue memory) {
-        return ts().permissionQueue[_index];
+        return qs().get(_index);
     }
 
     function timelockEnabled() public view returns (bool) {

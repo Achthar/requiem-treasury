@@ -135,7 +135,7 @@ describe('DiamondTestTreasury', async function () {
       mockAssetPricer.address
     )
 
-    await treasuryFacet.execute(0)
+    await treasuryFacet.execute(1)
 
     const entr = await treasuryFacet.permissions(0, contractOwner.address)
     assert.equal(entr, true)
@@ -146,7 +146,7 @@ describe('DiamondTestTreasury', async function () {
       mockAssetPricer.address
     )
 
-    await treasuryFacet.execute(1)
+    await treasuryFacet.execute(2)
 
     const isAsset = await treasuryFacet.permissions(1, mockAsset.address)
     assert.equal(isAsset, true)
@@ -160,7 +160,7 @@ describe('DiamondTestTreasury', async function () {
       ethers.constants.AddressZero
     )
 
-    await treasuryFacet.execute(2)
+    await treasuryFacet.execute(3)
 
     const rewarder = await treasuryFacet.permissions(3, depo.address)
     assert.equal(rewarder, true)
@@ -210,7 +210,7 @@ describe('DiamondTestTreasury', async function () {
   })
 
 
-  it('can withdraw if approved', async () => {
+  it('can deposit if approved', async () => {
 
     await treasuryFacet.queueTimelock(
       0, // depositor
@@ -218,7 +218,7 @@ describe('DiamondTestTreasury', async function () {
       ethers.constants.AddressZero
     )
 
-    await treasuryFacet.execute(3)
+    await treasuryFacet.execute(4)
     await mockAsset.connect(otherAccount).approve(diamondAddress, ethers.constants.MaxUint256)
 
     const valuation = await treasuryFacet.assetValue(mockAsset.address, '1000')
@@ -238,7 +238,7 @@ describe('DiamondTestTreasury', async function () {
       ethers.constants.AddressZero
     )
 
-    await treasuryFacet.execute(4)
+    await treasuryFacet.execute(5)
 
     await mockREQ.connect(otherAccount).approve(treasuryFacet.address, ethers.constants.MaxUint256)
 

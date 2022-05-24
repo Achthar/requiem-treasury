@@ -5,28 +5,21 @@ import "../interfaces/IREQ.sol";
 import "../interfaces/ICreditREQ.sol";
 import "./LibDiamond.sol";
 
-// enum here jsut for reference - uint256 used for upgradability
-// enum STATUS {
-//     ASSETDEPOSITOR, =0
-//     ASSET, = 1
-//     ASSETMANAGER, = 2
-//     REWARDMANAGER, = 3
-//     DEBTMANAGER, = 4
-//     DEBTOR, = 5
-//     COLLATERAL, = 6
-//     CREQ = 7
-// }
-
-struct Queue {
-    // STATUS managing;
-    uint256 managing;
-    address toPermit;
-    address calculator;
-    uint256 timelockEnd;
-    bool nullify;
-    bool executed;
+// We do ot use an array of stucts to avoid pointer conflicts
+// Mappings help us avoid out of bound issues as in arrays,
+// particularly if another mapping is added to the struct
+struct QueueStorage {
+    uint256 currentIndex;
+    mapping(uint256 => uint256) managing;
+    mapping(uint256 => address) toPermit;
+    mapping(uint256 => address) calculator;
+    mapping(uint256 => uint256) timelockEnd;
+    mapping(uint256 => bool) nullify;
+    mapping(uint256 => bool) executed;
 }
 
+
+// Management storage that stores the different DAO roles
 struct ManagementStorage {
     address governor;
     address guardian;
@@ -38,6 +31,7 @@ struct ManagementStorage {
     address newVault;
 }
 
+// The core Treasury store
 struct TreasuryStorage {
     // requiem global assets
     IREQ REQ;
@@ -54,7 +48,7 @@ struct TreasuryStorage {
     uint256 totalReserves;
     uint256 totalDebt;
     uint256 reqDebt;
-    Queue[] permissionQueue;
+    
     uint256 blocksNeededForQueue;
     bool timelockEnabled;
     bool useExcessReserves;
@@ -107,12 +101,20 @@ struct TreasuryStorage {
 library LibStorage {
     // Storage are structs where the data gets updated throughout the lifespan of the project
     bytes32 constant TREASURY_STORAGE = keccak256("requiem.storage.treasury");
+    bytes32 constant QUEUE_STORAGE = keccak256("requiem.storage.queue");
     bytes32 constant MANAGEMENT_STORAGE = keccak256("requiem.storage.authority");
 
     function treasuryStorage() internal pure returns (TreasuryStorage storage ts) {
         bytes32 position = TREASURY_STORAGE;
         assembly {
             ts.slot := position
+        }
+    }
+
+    function queueStorage() internal pure returns (QueueStorage storage qs) {
+        bytes32 position = QUEUE_STORAGE;
+        assembly {
+            qs.slot := position
         }
     }
 
@@ -145,7 +147,7 @@ library LibStorage {
  * The `WithStorage` contract provides a base contract for Facet contracts to inherit.
  *
  * It mainly provides internal helpers to access the storage structs, which reduces
- * calls like `LibStorage.gameStorage()` to just `gs()`.
+ * calls like `LibStorage.treasuryStorage()` to just `ts()`.
  *
  * To understand why the storage stucts must be accessed using a function instead of a
  * state variable, please refer to the documentation above `LibStorage` in this file.
@@ -153,6 +155,10 @@ library LibStorage {
 contract WithStorage {
     function ts() internal pure returns (TreasuryStorage storage) {
         return LibStorage.treasuryStorage();
+    }
+
+    function qs() internal pure returns (QueueStorage storage) {
+        return LibStorage.queueStorage();
     }
 
     function ms() internal pure returns (ManagementStorage storage) {

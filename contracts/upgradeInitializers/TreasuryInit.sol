@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
 /******************************************************************************/
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {LibStorage, WithStorage, TreasuryStorage, ManagementStorage} from "../libraries/LibStorage.sol";
+import {LibStorage, WithStorage, TreasuryStorage, ManagementStorage, QueueStorage} from "../libraries/LibStorage.sol";
 
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
@@ -52,6 +52,9 @@ contract TreasuryInit is WithStorage {
         ts.blocksNeededForQueue = 0;
         ts.useExcessReserves = false;
         ts.CREQ = ICreditREQ(_creq);
+
+        QueueStorage storage qs = LibStorage.queueStorage();
+        qs.currentIndex = 0;
 
         ManagementStorage storage ms = LibStorage.managementStorage();
         ms.governor = _management;
