@@ -12,9 +12,7 @@ const { ethers } = require('hardhat')
 async function deployDiamond() {
 
   abiDecoder.addABI([...TreasuryArtifact.abi, ...DiamondLoupeArtifact.abi, ...OwenershipArtifact.abi]);
-  // abiDecoder.addABI(DiamondLoupeArtifact.abi);
-  // abiDecoder.addABI(OwenershipArtifact.abi);
-  // console.log("ABI", TreasuryArtifact.abi)
+
   const accounts = await ethers.getSigners()
   const contractOwner = accounts[0]
 

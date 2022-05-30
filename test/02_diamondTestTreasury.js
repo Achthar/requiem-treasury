@@ -7,7 +7,11 @@ const {
   findAddressPositionInFacets
 } = require('../scripts/libraries/diamond.js')
 
-const { deployDiamond } = require('../scripts/deployTreasury.js')
+const { deployDiamond } = require('../scripts/01_deployTreasuryTest.js')
+const { solidity } = require('ethereum-waffle')
+const chai = require('chai');
+chai.use(solidity);
+
 
 const { assert, expect } = require('chai')
 const { ethers } = require('hardhat')

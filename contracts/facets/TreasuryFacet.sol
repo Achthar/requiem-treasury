@@ -37,7 +37,7 @@ struct Queue {
 // Helper library to enable upgradeable queuing
 // It just uses the current state of the queue storage and parses it to
 // the Queue struct above - which avoids using arrays or mappings of structs
-// Gas cost is not too important here as these are only uses in rare cases
+// Gas cost is not too important here as these are only used in rare cases
 library QueueStorageLib {
     function push(QueueStorage storage self, Queue memory newEntry) internal {
         uint256 newIndex = self.currentIndex + 1;
@@ -176,12 +176,12 @@ contract TreasuryFacet is ITreasury, WithStorage {
 
     /**
      * DEBT: The debt functions allow approved addresses to borrow treasury assets
-     * or ts().REQ from the treasury, using sts().REQ as collateral. This might allow an
-     * sts().REQ holder to provide ts().REQ liquidity without taking on the opportunity cost
+     * or REQ from the treasury, using CREQ as collateral. This might allow an
+     * CREQ holder to provide REQ liquidity without taking on the opportunity cost
      * of unstaking, or alter their backing without imposing risk onto the treasury.
      * Many of these use cases are yet to be defined, but they appear promising.
      * However, we urge the community to think critically and move slowly upon
-     * proposals to acquire these ts().permissions.
+     * proposals to acquire these permissions.
      */
 
     /**
