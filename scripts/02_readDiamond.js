@@ -39,7 +39,7 @@ async function main() {
 
     const treasuryContract = new ethers.Contract(diamondAddress, new ethers.utils.Interface(TreasuryArtifact.abi), contractOwner)
 
-    const x = await treasuryContract.permissionQueue(2)
+    const x = await treasuryContract.permissionQueue(4)
 
     console.log("TS", x)
 

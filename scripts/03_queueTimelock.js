@@ -92,7 +92,7 @@ async function main() {
 
     if (queues.STABLEPRICER) {
         console.log("queue Stable Calculator")
-        const calculator = ''
+        const calculator = '0x3e6f6f5991fa6b94e08cddbecf03567c7e8da38f'
         const asset = '0x99674285c50CdB86AE423aac9be7917d7D054994' // stable LP
         const quote = '0xaea51e4fee50a980928b4353e852797b54deacd8' // dai
         await treasuryContract.queueTimelock(

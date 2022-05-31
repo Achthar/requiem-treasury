@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../libraries/LibStorage.sol";
-import "../utils/SafeERC20.sol";
+import "../../libraries/LibStorage.sol";
+import "../../utils/SafeERC20.sol";
 
-import "../interfaces/IERC20.sol";
-import "../interfaces/IERC20Metadata.sol";
-import "../interfaces/ICreditREQ.sol";
+import "../../interfaces/IERC20.sol";
+import "../../interfaces/IERC20Metadata.sol";
+import "../../interfaces/ICreditREQ.sol";
 import "./IAssetPricer.sol";
-import "../interfaces/ITreasury.sol";
+import "../../interfaces/ITreasury.sol";
 
 // the managing / status input is coded as follows:
 // enum STATUS {
