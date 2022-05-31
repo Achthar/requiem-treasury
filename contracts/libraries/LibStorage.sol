@@ -16,6 +16,7 @@ struct QueueStorage {
     mapping(uint256 => uint256) timelockEnd;
     mapping(uint256 => bool) nullify;
     mapping(uint256 => bool) executed;
+    mapping(uint256 => address) quote;
 }
 
 
@@ -53,6 +54,7 @@ struct TreasuryStorage {
     bool timelockEnabled;
     bool useExcessReserves;
     uint256 onChainGovernanceTimelock;
+    mapping(address => address) quotes;
 }
 
 /**

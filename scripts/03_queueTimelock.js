@@ -34,26 +34,80 @@ const { ethers } = require('hardhat')
 //     CREQ = 7
 // }
 
+const status = {
+    'ASSETDEPOSITOR': 0,
+    'ASSET': 1,
+    'ASSETMANAGER': 2,
+    'REWARDMANAGER': 3,
+    'DEBTMANAGER': 4,
+}
+
+
+// simple script for queuing actions
+// sometimes then execute command does not work right away
 async function main() {
 
-    const diamondAddress = '0xb3f4bCb8f30E70763c0Cf100a01252b81D23D9ec'
 
+    const queues = {
+        'DEPOSITOR': false,
+        'STABLEPRICER': true,
+        'ASSET': false,
+        'ASSETMANAGER': false,
+        'REWARDMANAGER': false,
+
+    }
+
+    const diamondAddress = '0xb3f4bCb8f30E70763c0Cf100a01252b81D23D9ec'
+    const bondDepo = '0x56055f641DCb7a5C399553CdCA03E5C56E301A27'
     const accounts = await ethers.getSigners()
     const contractOwner = accounts[0]
 
-    const reqContract = new ethers.Contract(reqAddress, new ethers.utils.Interface(ERC20.abi), contractOwner)
-
-    // TreasuryFacetFactory
-    const TreasuryFacet = await ethers.getContractFactory('TreasuryFacet')
-    const treasuryFacet = await TreasuryFacet.attach(diamondAddress)
-
     const treasuryContract = new ethers.Contract(diamondAddress, new ethers.utils.Interface(TreasuryArtifact.abi), contractOwner)
 
-    const x = await treasuryContract.REQ()
+    if (queues.DEPOSITOR) {
+        console.log("queue Asset Depositor")
+        await treasuryContract.queueTimelock(
+            status.ASSETDEPOSITOR,
+            bondDepo,
+            ethers.constants.AddressZero,
+            ethers.constants.AddressZero
+        )
 
-    console.log("TS", x)
+        console.log("execute Asset Depositor")
+        await treasuryContract.execute(1)
+    }
 
-    console.log('Completed view')
+    if (queues.REWARDMANAGER) {
+        console.log("queue Rewardmanager")
+        await treasuryContract.queueTimelock(
+            status.REWARDMANAGER,
+            bondDepo,
+            ethers.constants.AddressZero,
+            ethers.constants.AddressZero
+        )
+
+        console.log("execute Rewardmanager")
+        await treasuryContract.execute(2)
+    }
+
+    if (queues.STABLEPRICER) {
+        console.log("queue Stable Calculator")
+        const calculator = ''
+        const asset = '0x99674285c50CdB86AE423aac9be7917d7D054994' // stable LP
+        const quote = '0xaea51e4fee50a980928b4353e852797b54deacd8' // dai
+        await treasuryContract.queueTimelock(
+            status.ASSET,
+            asset,
+            calculator,
+            quote
+        )
+
+        console.log("execute calculator")
+        await treasuryContract.execute(3)
+    }
+
+
+    console.log('Completed execution')
 }
 
 main()

@@ -299,7 +299,8 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
     function queueTimelock(
         uint256 _status,
         address _address,
-        address _calculator
+        address _calculator,
+        address
     ) external onlyGovernor {
         require(_address != address(0));
         require(ts().timelockEnabled == true, "Timelock is disabled, use enable");
@@ -398,7 +399,7 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
      */
     function assetValue(address _token, uint256 _amount) public view override returns (uint256 value_) {
         if (ts().permissions[1][_token]) {
-            value_ = IAssetPricer(ts().assetPricer[_token]).valuation(_token, _amount);
+            value_ = IAssetPricer(ts().assetPricer[_token]).valuation(_token, address(0), _amount);
         } else {
             revert(invalidAsset);
         }

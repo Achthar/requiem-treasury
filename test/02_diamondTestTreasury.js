@@ -136,7 +136,8 @@ describe('DiamondTestTreasury', async function () {
     await treasuryFacet.queueTimelock(
       0, // asset depositor
       contractOwner.address,
-      mockAssetPricer.address
+      ethers.constants.AddressZero,
+      ethers.constants.AddressZero
     )
 
     await treasuryFacet.execute(1)
@@ -147,7 +148,8 @@ describe('DiamondTestTreasury', async function () {
     await treasuryFacet.queueTimelock(
       1, // asset
       mockAsset.address,
-      mockAssetPricer.address
+      mockAssetPricer.address,
+      mockDAI.address
     )
 
     await treasuryFacet.execute(2)
@@ -161,6 +163,7 @@ describe('DiamondTestTreasury', async function () {
     await treasuryFacet.queueTimelock(
       3, // rewardmanger
       depo.address,
+      ethers.constants.AddressZero,
       ethers.constants.AddressZero
     )
 
@@ -185,6 +188,7 @@ describe('DiamondTestTreasury', async function () {
     await expect(treasuryFacet.connect(otherAccount).queueTimelock(
       2, // assetmanager
       otherAccount.address,
+      ethers.constants.AddressZero,
       ethers.constants.AddressZero
     )
     ).to.be.revertedWith("Treasury: Must be governor")
@@ -219,6 +223,7 @@ describe('DiamondTestTreasury', async function () {
     await treasuryFacet.queueTimelock(
       0, // depositor
       otherAccount.address,
+      ethers.constants.AddressZero,
       ethers.constants.AddressZero
     )
 
@@ -239,6 +244,7 @@ describe('DiamondTestTreasury', async function () {
     await treasuryFacet.queueTimelock(
       2, // assetmanager
       otherAccount.address,
+      ethers.constants.AddressZero,
       ethers.constants.AddressZero
     )
 

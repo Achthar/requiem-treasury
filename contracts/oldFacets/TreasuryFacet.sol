@@ -7,7 +7,7 @@ import "../utils/SafeERC20.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IERC20Metadata.sol";
 import "../interfaces/ICreditREQ.sol";
-import "../interfaces/IAssetPricer.sol";
+import "./IAssetPricer.sol";
 import "../interfaces/ITreasury.sol";
 
 // the managing / status input is coded as follows:
@@ -32,7 +32,6 @@ struct Queue {
     uint256 timelockEnd;
     bool nullify;
     bool executed;
-    address quote;
 }
 
 // Helper library to enable upgradeable queuing
@@ -60,15 +59,14 @@ library QueueStorageLib {
                 self.calculator[_index],
                 self.timelockEnd[_index],
                 self.nullify[_index],
-                self.executed[_index],
-                self.quote[_index]
+                self.executed[_index]
             );
     }
 }
 
 // The treasury facet that contains the logic that changes the storage
 // Aligned with EIP-2535, the contract has no constructor or an own state
-contract TreasuryFacet is ITreasury, WithStorage {
+contract TreasuryFacet_000 is ITreasury, WithStorage {
     using SafeERC20 for IERC20;
     using QueueStorageLib for QueueStorage;
 
@@ -276,12 +274,12 @@ contract TreasuryFacet is ITreasury, WithStorage {
      * @notice enable permission from queue
      * @param _status STATUS
      * @param _address address
-     * @param _pricer address
+     * @param _calculator address
      */
     function enable(
         uint256 _status,
         address _address,
-        address _pricer
+        address _calculator
     ) external {
         require(!ts().timelockEnabled, "Use queueTimelock");
         if (_status == 7) {
@@ -290,7 +288,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
             ts().permissions[_status][_address] = true;
 
             if (_status == 1) {
-                ts().assetPricer[_address] = _pricer;
+                ts().assetPricer[_address] = _calculator;
             }
 
             (bool registered, ) = indexInRegistry(_address, _status);
@@ -348,14 +346,12 @@ contract TreasuryFacet is ITreasury, WithStorage {
      * @notice queue address to receive permission
      * @param _status STATUS
      * @param _address address
-     * @param _pricer address
-     * @param _quote address
+     * @param _calculator address
      */
     function queueTimelock(
         uint256 _status,
         address _address,
-        address _pricer,
-        address _quote
+        address _calculator
     ) external onlyGovernor {
         require(_address != address(0));
         require(ts().timelockEnabled, "Timelock is disabled, use enable");
@@ -363,21 +359,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         if (_status == 2) {
             timelock = block.timestamp + ts().timeNeededForQueue * 2;
         }
-        if (_pricer != address(0)) {
-            require(_quote != address(0), "Must provide quote");
-        }
-
-        qs().push(
-            Queue({
-                managing: _status,
-                toPermit: _address,
-                calculator: _pricer,
-                timelockEnd: timelock,
-                nullify: false,
-                executed: false,
-                quote: _quote
-            })
-        );
+        qs().push(Queue({managing: _status, toPermit: _address, calculator: _calculator, timelockEnd: timelock, nullify: false, executed: false}));
         emit PermissionQueued(_status, _address);
     }
 
@@ -401,7 +383,6 @@ contract TreasuryFacet is ITreasury, WithStorage {
 
             if (info.managing == 1) {
                 ts().assetPricer[info.toPermit] = info.calculator;
-                ts().quotes[info.toPermit] = info.quote;
             }
             (bool registered, ) = indexInRegistry(info.toPermit, info.managing);
             if (!registered) {
@@ -466,7 +447,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
      */
     function assetValue(address _asset, uint256 _amount) public view override returns (uint256 value_) {
         if (ts().permissions[1][_asset]) {
-            value_ = IAssetPricer(ts().assetPricer[_asset]).valuation(_asset, ts().quotes[_asset], _amount);
+            value_ = IAssetPricer(ts().assetPricer[_asset]).valuation(_asset, _amount);
         } else {
             revert("Treasury: invalid asset");
         }
