@@ -6,23 +6,22 @@ const ERC20Artifact = require('../artifacts/contracts/test/ERC20.sol/ERC20.json'
 
 const { ethers } = require('hardhat')
 
-const { diamondAddress } = require('../addresses/general')
-const { assets } = require('../addresses/assets')
+const { addresses } = require('../deployments/addresses')
 
 // simple script for queuing actions
 // sometimes then execute command does not work right away
 async function main() {
-    const network = await ethers.getDefaultProvider().getNetwork();
-    const chainId = network.chainId
+    const chainId = await (await ethers.getSigner()).getChainId();
 
     const accounts = await ethers.getSigners()
     const operator = accounts[0]
 
     const toDeposit = ethers.BigNumber.from('10').mul(ethers.BigNumber.from(10).pow(18))
+    const profit = ethers.BigNumber.from('9').mul(ethers.BigNumber.from(10).pow(18))
 
-    const treasuryContract = new ethers.Contract(diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
+    const treasuryContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
 
-    const assetContract = new ethers.Contract(assets[chainId].DAI, new ethers.utils.Interface(ERC20Artifact.abi), operator)
+    const assetContract = new ethers.Contract(addresses.assets.DAI[chainId], new ethers.utils.Interface(ERC20Artifact.abi), operator)
 
     const allowance = await assetContract.allowance(operator.address, treasuryContract.address)
 
@@ -33,7 +32,7 @@ async function main() {
     await treasuryContract.deposit(
         toDeposit, // uint256 _amount,
         assetContract.address, // address _asset,
-        0 // uint256 _profit
+        profit // uint256 _profit
     )
 
     await treasuryContract.auditReserves()

@@ -5,7 +5,7 @@ import "../interfaces/IREQ.sol";
 import "../interfaces/ICreditREQ.sol";
 import "./LibDiamond.sol";
 
-// We do ot use an array of stucts to avoid pointer conflicts
+// We do not use an array of stucts to avoid pointer conflicts
 // Mappings help us avoid out of bound issues as in arrays,
 // particularly if another mapping is added to the struct
 struct QueueStorage {

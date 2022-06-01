@@ -1,21 +1,21 @@
 {
-  "name": "contracts-starter",
+  "name": "requiem-treasury",
   "version": "1.0.0",
-  "description": "Template for contract projects.",
+  "description": "Treasury for Requiem Finance using EIP-2535 Diamonds.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mudgen/contracts-starter.git"
+    "url": "git+https://github.com/Achthar/requiem-treasury.git"
   },
-  "author": "Nick Mudge",
+  "author": "Achim Huebl",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mudgen/contracts-starter/issues"
+    "url": "https://github.com/Achthar/requiem-treasury.git/issues"
   },
-  "homepage": "https://github.com/mudgen/contracts-starter#readme",
+  "homepage": "https://github.com/Achthar/requiem-treasury.git#readme",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-solhint": "^2.0.0",

@@ -52,7 +52,7 @@ library QueueStorageLib {
     }
 
     function get(QueueStorage storage self, uint256 _index) internal view returns (Queue memory) {
-        require(_index <= self.currentIndex && _index > 0, "Queue: Invalid index");
+        require(_index <= self.currentIndex, "Queue: Invalid index");
         return
             Queue(
                 self.managing[_index],

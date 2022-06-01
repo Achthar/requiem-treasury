@@ -3,8 +3,8 @@
 
 const { FacetCutAction, getSelectors } = require('../libraries/diamond.js')
 const { ethers } = require('hardhat')
-const { diamondAddress } = require('../../addresses/general')
 
+const addresses = require('../../deployments/addresses.json')
 const oldABI = require('../../contracts/oldFacets/v00/treasuryFacetABI.json')
 
 // script for upgrading the treasury facet
@@ -22,14 +22,14 @@ async function main() {
     // deploy new facet contract
     const treasuryFacet = await TreasuryFacet.deploy()
 
-    const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress[chainId])
+    const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', addresses.diamondAddress[chainId])
 
     // get diamondCutFacet for upgrading
-    const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress[chainId])
+    const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', addresses.diamondAddress[chainId])
 
 
     // get old contract data
-    const oldContract = new ethers.Contract(diamondAddress[chainId], new ethers.utils.Interface(oldABI))
+    const oldContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(oldABI))
 
     const oldSelectors = getSelectors(oldContract)
 

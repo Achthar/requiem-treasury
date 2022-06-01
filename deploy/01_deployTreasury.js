@@ -3,23 +3,15 @@
 
 const { getSelectors, FacetCutAction } = require('../scripts/libraries/diamond.js')
 
-const abiDecoder = require('abi-decoder')
 const { ethers } = require('hardhat')
 
-// facets
-const TreasuryArtifact = require('../artifacts/contracts/facets/TreasuryFacet.sol/TreasuryFacet.json')
-const DiamondLoupeArtifact = require('../artifacts/contracts/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json')
-const OwnershipFacet = require('../artifacts/contracts/facets/OwnershipFacet.sol/OwnershipFacet.json')
-const ManagementFacet = require('../artifacts/contracts/facets/ManagementFacet.sol/ManagementFacet.json')
-
-// req proxy address
-const {reqAddress} =require('../addresses/general')
+// addresses
+const { addresses } = require('../deployments/addresses')
 
 async function main() {
-    const network = await ethers.getDefaultProvider().getNetwork();
-    const chainId = network.chainId
+    const chainId = await (await ethers.getSigner()).getChainId();
 
-    abiDecoder.addABI([...TreasuryArtifact.abi, ...DiamondLoupeArtifact.abi, ...OwnershipFacet.abi, ...ManagementFacet.abi]);
+    console.log("Deploy Treasury Diamond with REQ", addresses.reqAddress[chainId], "on", chainId)
 
     const accounts = await ethers.getSigners()
     const operator = accounts[0]
@@ -78,7 +70,7 @@ async function main() {
     let receipt
 
     // call to init function
-    let functionCall = treasuryInit.interface.encodeFunctionData('init', [operator.address, reqAddress[chainId], ethers.constants.AddressZero])
+    let functionCall = treasuryInit.interface.encodeFunctionData('init', [operator.address, addresses.reqAddress[chainId], ethers.constants.AddressZero])
     tx = await diamondCut.diamondCut(cut, treasuryInit.address, functionCall)
     console.log('Diamond cut tx: ', tx.hash)
     receipt = await tx.wait()
