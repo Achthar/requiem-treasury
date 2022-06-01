@@ -28,7 +28,7 @@ import "../interfaces/ITreasury.sol";
 struct Queue {
     uint256 managing;
     address toPermit;
-    address calculator;
+    address pricer;
     uint256 timelockEnd;
     bool nullify;
     bool executed;
@@ -45,7 +45,7 @@ library QueueStorageLib {
         self.currentIndex = newIndex;
         self.managing[newIndex] = newEntry.managing;
         self.toPermit[newIndex] = newEntry.toPermit;
-        self.calculator[newIndex] = newEntry.calculator;
+        self.pricer[newIndex] = newEntry.pricer;
         self.timelockEnd[newIndex] = newEntry.timelockEnd;
         self.nullify[newIndex] = newEntry.nullify;
         self.executed[newIndex] = newEntry.executed;
@@ -57,7 +57,7 @@ library QueueStorageLib {
             Queue(
                 self.managing[_index],
                 self.toPermit[_index],
-                self.calculator[_index],
+                self.pricer[_index],
                 self.timelockEnd[_index],
                 self.nullify[_index],
                 self.executed[_index],
@@ -164,7 +164,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
     }
 
     /**
-     * @notice mint new ts().REQ using excess reserves
+     * @notice mint new REQ using excess reserves
      * @param _recipient address
      * @param _amount uint256
      */
@@ -371,7 +371,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
             Queue({
                 managing: _status,
                 toPermit: _address,
-                calculator: _pricer,
+                pricer: _pricer,
                 timelockEnd: timelock,
                 nullify: false,
                 executed: false,
@@ -400,7 +400,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
             ts().permissions[info.managing][info.toPermit] = true;
 
             if (info.managing == 1) {
-                ts().assetPricer[info.toPermit] = info.calculator;
+                ts().assetPricer[info.toPermit] = info.pricer;
                 ts().quotes[info.toPermit] = info.quote;
             }
             (bool registered, ) = indexInRegistry(info.toPermit, info.managing);
@@ -515,6 +515,10 @@ contract TreasuryFacet is ITreasury, WithStorage {
         return qs().get(_index);
     }
 
+    function lastPermissionQueueIndex() public view returns (uint256) {
+        return qs().currentIndex;
+    }
+
     function timelockEnabled() public view returns (bool) {
         return ts().timelockEnabled;
     }
@@ -531,7 +535,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         return ts().REQ;
     }
 
-    function CCREQ() public view returns (ICreditREQ) {
+    function CREQ() public view returns (ICreditREQ) {
         return ts().CREQ;
     }
 }

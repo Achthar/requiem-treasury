@@ -27,6 +27,17 @@ struct Queue {
     bool executed;
 }
 
+struct QueueStorage {
+    uint256 currentIndex;
+    mapping(uint256 => uint256) managing;
+    mapping(uint256 => address) toPermit;
+    mapping(uint256 => address) pricer;
+    mapping(uint256 => address) quote;
+    mapping(uint256 => uint256) timelockEnd;
+    mapping(uint256 => bool) nullify;
+    mapping(uint256 => bool) executed;
+}
+
 struct ManagementStorage {
     address governor;
     address guardian;
@@ -112,6 +123,7 @@ struct NewStorage {
 library LibStorage {
     // Storage are structs where the data gets updated throughout the lifespan of the project
     bytes32 constant TREASURY_STORAGE = keccak256("requiem.storage.treasury");
+    bytes32 constant QUEUE_STORAGE = keccak256("requiem.storage.queue");
     bytes32 constant MANAGEMENT_STORAGE = keccak256("requiem.storage.authority");
 
     function treasuryStorage() internal pure returns (TreasuryStorageV2 storage ts) {
@@ -127,6 +139,14 @@ library LibStorage {
             ms.slot := position
         }
     }
+
+    function queueStorage() internal pure returns (QueueStorage storage qs) {
+        bytes32 position = QUEUE_STORAGE;
+        assembly {
+            qs.slot := position
+        }
+    }
+
     // Authority access control
     function enforcePolicy() internal view {
         require(msg.sender == managementStorage().policy, "Treasury: Must be policy");
@@ -143,6 +163,7 @@ library LibStorage {
     function enforceVault() internal view {
         require(msg.sender == managementStorage().guardian, "Treasury: Must be vault");
     }
+
     // Storage are structs where the data gets updated throughout the lifespan of the project
     bytes32 constant ADDED_STORAGE = keccak256("requiem.storage.added");
 
@@ -170,6 +191,10 @@ contract WithStorage {
 
     function ms() internal pure returns (ManagementStorage storage) {
         return LibStorage.managementStorage();
+    }
+
+    function qs() internal pure returns (QueueStorage storage) {
+        return LibStorage.queueStorage();
     }
 
     // extended storage

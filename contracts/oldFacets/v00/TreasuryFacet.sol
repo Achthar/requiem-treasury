@@ -28,7 +28,7 @@ import "../../interfaces/ITreasury.sol";
 struct Queue {
     uint256 managing;
     address toPermit;
-    address calculator;
+    address pricer;
     uint256 timelockEnd;
     bool nullify;
     bool executed;
@@ -44,7 +44,7 @@ library QueueStorageLib {
         self.currentIndex = newIndex;
         self.managing[newIndex] = newEntry.managing;
         self.toPermit[newIndex] = newEntry.toPermit;
-        self.calculator[newIndex] = newEntry.calculator;
+        self.pricer[newIndex] = newEntry.pricer;
         self.timelockEnd[newIndex] = newEntry.timelockEnd;
         self.nullify[newIndex] = newEntry.nullify;
         self.executed[newIndex] = newEntry.executed;
@@ -56,7 +56,7 @@ library QueueStorageLib {
             Queue(
                 self.managing[_index],
                 self.toPermit[_index],
-                self.calculator[_index],
+                self.pricer[_index],
                 self.timelockEnd[_index],
                 self.nullify[_index],
                 self.executed[_index]
@@ -274,12 +274,12 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
      * @notice enable permission from queue
      * @param _status STATUS
      * @param _address address
-     * @param _calculator address
+     * @param _pricer address
      */
     function enable(
         uint256 _status,
         address _address,
-        address _calculator
+        address _pricer
     ) external {
         require(!ts().timelockEnabled, "Use queueTimelock");
         if (_status == 7) {
@@ -288,7 +288,7 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
             ts().permissions[_status][_address] = true;
 
             if (_status == 1) {
-                ts().assetPricer[_address] = _calculator;
+                ts().assetPricer[_address] = _pricer;
             }
 
             (bool registered, ) = indexInRegistry(_address, _status);
@@ -346,12 +346,12 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
      * @notice queue address to receive permission
      * @param _status STATUS
      * @param _address address
-     * @param _calculator address
+     * @param _pricer address
      */
     function queueTimelock(
         uint256 _status,
         address _address,
-        address _calculator
+        address _pricer
     ) external onlyGovernor {
         require(_address != address(0));
         require(ts().timelockEnabled, "Timelock is disabled, use enable");
@@ -359,7 +359,7 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
         if (_status == 2) {
             timelock = block.timestamp + ts().timeNeededForQueue * 2;
         }
-        qs().push(Queue({managing: _status, toPermit: _address, calculator: _calculator, timelockEnd: timelock, nullify: false, executed: false}));
+        qs().push(Queue({managing: _status, toPermit: _address, pricer: _pricer, timelockEnd: timelock, nullify: false, executed: false}));
         emit PermissionQueued(_status, _address);
     }
 
@@ -382,7 +382,7 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
             ts().permissions[info.managing][info.toPermit] = true;
 
             if (info.managing == 1) {
-                ts().assetPricer[info.toPermit] = info.calculator;
+                ts().assetPricer[info.toPermit] = info.pricer;
             }
             (bool registered, ) = indexInRegistry(info.toPermit, info.managing);
             if (!registered) {
@@ -496,6 +496,10 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
         return qs().get(_index);
     }
 
+    function lastPermissionQueueIndex() public view returns (uint256) {
+        return qs().currentIndex;
+    }
+
     function timelockEnabled() public view returns (bool) {
         return ts().timelockEnabled;
     }
@@ -512,7 +516,7 @@ contract TreasuryFacet_000 is ITreasury, WithStorage {
         return ts().REQ;
     }
 
-    function CCREQ() public view returns (ICreditREQ) {
+    function CREQ() public view returns (ICreditREQ) {
         return ts().CREQ;
     }
 }

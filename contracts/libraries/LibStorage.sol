@@ -12,11 +12,11 @@ struct QueueStorage {
     uint256 currentIndex;
     mapping(uint256 => uint256) managing;
     mapping(uint256 => address) toPermit;
-    mapping(uint256 => address) calculator;
+    mapping(uint256 => address) pricer;
+    mapping(uint256 => address) quote;
     mapping(uint256 => uint256) timelockEnd;
     mapping(uint256 => bool) nullify;
     mapping(uint256 => bool) executed;
-    mapping(uint256 => address) quote;
 }
 
 
@@ -40,7 +40,9 @@ struct TreasuryStorage {
     // general registers
     mapping(uint256 => address[]) registry;
     mapping(uint256 => mapping(address => bool)) permissions;
+    // pricer and corresponding quote address
     mapping(address => address) assetPricer;
+    mapping(address => address) quotes;
     mapping(address => uint256) debtLimits;
     // asset data
     mapping(address => uint256) assetReserves;
@@ -54,7 +56,6 @@ struct TreasuryStorage {
     bool timelockEnabled;
     bool useExcessReserves;
     uint256 onChainGovernanceTimelock;
-    mapping(address => address) quotes;
 }
 
 /**

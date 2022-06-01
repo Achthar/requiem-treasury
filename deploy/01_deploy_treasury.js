@@ -4,20 +4,25 @@
 const { getSelectors, FacetCutAction } = require('../scripts/libraries/diamond.js')
 
 const abiDecoder = require('abi-decoder')
+const { ethers } = require('hardhat')
+
+// facets
 const TreasuryArtifact = require('../artifacts/contracts/facets/TreasuryFacet.sol/TreasuryFacet.json')
 const DiamondLoupeArtifact = require('../artifacts/contracts/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json')
 const OwnershipFacet = require('../artifacts/contracts/facets/OwnershipFacet.sol/OwnershipFacet.json')
 const ManagementFacet = require('../artifacts/contracts/facets/ManagementFacet.sol/ManagementFacet.json')
-const { ethers } = require('hardhat')
+
+// req proxy address
+const {reqAddress} =require('../addresses/general')
 
 async function main() {
-
-    const reqAddress = '0xD27388BA6b3A44003A85E336e2Fd76d6e331EF87'
+    const network = await ethers.getDefaultProvider().getNetwork();
+    const chainId = network.chainId
 
     abiDecoder.addABI([...TreasuryArtifact.abi, ...DiamondLoupeArtifact.abi, ...OwnershipFacet.abi, ...ManagementFacet.abi]);
 
     const accounts = await ethers.getSigners()
-    const contractOwner = accounts[0]
+    const operator = accounts[0]
 
     // deploy DiamondCutFacet
     const DiamondCutFacet = await ethers.getContractFactory('DiamondCutFacet')
@@ -28,7 +33,7 @@ async function main() {
 
     // deploy Diamond
     const Diamond = await ethers.getContractFactory('Diamond')
-    const diamond = await Diamond.deploy(contractOwner.address, diamondCutFacet.address)
+    const diamond = await Diamond.deploy(operator.address, diamondCutFacet.address)
     await diamond.deployed()
     console.log('Diamond deployed:', diamond.address)
 
@@ -73,7 +78,7 @@ async function main() {
     let receipt
 
     // call to init function
-    let functionCall = treasuryInit.interface.encodeFunctionData('init', [contractOwner.address, reqAddress, ethers.constants.AddressZero])
+    let functionCall = treasuryInit.interface.encodeFunctionData('init', [operator.address, reqAddress[chainId], ethers.constants.AddressZero])
     tx = await diamondCut.diamondCut(cut, treasuryInit.address, functionCall)
     console.log('Diamond cut tx: ', tx.hash)
     receipt = await tx.wait()

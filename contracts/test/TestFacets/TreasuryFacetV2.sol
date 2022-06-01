@@ -381,6 +381,7 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
         ts().timelockEnabled = true;
         ts().blocksNeededForQueue = _blocksNeededForQueue;
     }
+
     /* ========== VIEW FUNCTIONS ========== */
 
     /**
@@ -448,6 +449,10 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
         return ts().permissionQueue[_index];
     }
 
+    function lastPermissionQueueIndex() public view returns (uint256) {
+        return qs().currentIndex;
+    }
+
     function timelockEnabled() public view returns (bool) {
         return ts().timelockEnabled;
     }
@@ -464,7 +469,7 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
         return ts().REQ;
     }
 
-    function CCREQ() public view returns (ICreditREQ) {
+    function CREQ() public view returns (ICreditREQ) {
         return ts().CREQ;
     }
 

@@ -3,14 +3,15 @@
 
 const { FacetCutAction, getSelectors } = require('../libraries/diamond.js')
 const { ethers } = require('hardhat')
+const { diamondAddress } = require('../../addresses/general')
 
 const oldABI = require('../../contracts/oldFacets/v00/treasuryFacetABI.json')
 
 // script for upgrading the treasury facet
 // we assume that all functions are desired to be replaced
 async function main() {
-    // address of Diamon to upgrade
-    const diamondAddress = '0xb3f4bCb8f30E70763c0Cf100a01252b81D23D9ec'
+    const network = await ethers.getDefaultProvider().getNetwork();
+    const chainId = network.chainId
 
     // get old facet address
     const oldTreasuryfacetAddress = '0xcd064614BA6e6Fc7C99D6cAbA2c1C30fe4309ecD'
@@ -21,14 +22,14 @@ async function main() {
     // deploy new facet contract
     const treasuryFacet = await TreasuryFacet.deploy()
 
-    const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress)
+    const diamondLoupeFacet = await ethers.getContractAt('DiamondLoupeFacet', diamondAddress[chainId])
 
     // get diamondCutFacet for upgrading
-    const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress)
+    const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress[chainId])
 
 
     // get old contract data
-    const oldContract = new ethers.Contract(diamondAddress, new ethers.utils.Interface(oldABI))
+    const oldContract = new ethers.Contract(diamondAddress[chainId], new ethers.utils.Interface(oldABI))
 
     const oldSelectors = getSelectors(oldContract)
 
