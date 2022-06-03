@@ -15,25 +15,8 @@ async function main() {
 
     const accounts = await ethers.getSigners()
     const operator = accounts[0]
-
-    const toDeposit = ethers.BigNumber.from('1000').mul(ethers.BigNumber.from(10).pow(18))
-    const profit = ethers.BigNumber.from('1').mul(ethers.BigNumber.from(10).pow(18))
-
+    
     const treasuryContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
-
-    const assetContract = new ethers.Contract(addresses.assets.DAI[chainId], new ethers.utils.Interface(ERC20Artifact.abi), operator)
-
-    const allowance = await assetContract.allowance(operator.address, treasuryContract.address)
-
-    if (allowance.lt(toDeposit)) {
-        await assetContract.approve(treasuryContract.address, ethers.constants.MaxUint256)
-    }
-
-    await treasuryContract.deposit(
-        toDeposit, // uint256 _amount,
-        assetContract.address, // address _asset,
-        profit // uint256 _profit
-    )
 
     await treasuryContract.auditReserves()
 

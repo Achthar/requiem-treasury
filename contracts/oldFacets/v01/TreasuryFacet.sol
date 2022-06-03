@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../libraries/LibStorage.sol";
-import "../utils/SafeERC20.sol";
+import "../../libraries/LibStorage.sol";
+import "../../utils/SafeERC20.sol";
 
-import "../interfaces/IERC20.sol";
-import "../interfaces/IERC20Metadata.sol";
-import "../interfaces/ICreditREQ.sol";
-import "../interfaces/IAssetPricer.sol";
-import "../interfaces/ITreasury.sol";
+import "../../interfaces/IERC20.sol";
+import "../../interfaces/IERC20Metadata.sol";
+import "../../interfaces/ICreditREQ.sol";
+import "../../interfaces/IAssetPricer.sol";
+import "../../interfaces/ITreasury.sol";
 
 // the managing / status input is coded as follows:
 // enum STATUS {
@@ -46,7 +46,6 @@ library QueueStorageLib {
         self.managing[newIndex] = newEntry.managing;
         self.toPermit[newIndex] = newEntry.toPermit;
         self.pricer[newIndex] = newEntry.pricer;
-        self.quote[newIndex] = newEntry.quote;
         self.timelockEnd[newIndex] = newEntry.timelockEnd;
         self.nullify[newIndex] = newEntry.nullify;
         self.executed[newIndex] = newEntry.executed;
@@ -69,7 +68,7 @@ library QueueStorageLib {
 
 // The treasury facet that contains the logic that changes the storage
 // Aligned with EIP-2535, the contract has no constructor or an own state
-contract TreasuryFacet is ITreasury, WithStorage {
+contract TreasuryFacet_001 is ITreasury, WithStorage {
     using SafeERC20 for IERC20;
     using QueueStorageLib for QueueStorage;
 
@@ -256,7 +255,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         uint256 reserves;
         address[] memory assets = ts().registry[1];
         for (uint256 i = 0; i < assets.length; i++) {
-            if (assets[i] != address(0) && ts().permissions[1][assets[i]]) {
+            if (ts().permissions[1][assets[i]]) {
                 reserves += assetValue(assets[i], IERC20(assets[i]).balanceOf(address(this)));
             }
         }
@@ -278,13 +277,11 @@ contract TreasuryFacet is ITreasury, WithStorage {
      * @param _status STATUS
      * @param _address address
      * @param _pricer address
-     * @param _quote address
      */
     function enable(
         uint256 _status,
         address _address,
-        address _pricer,
-        address _quote
+        address _pricer
     ) external {
         require(!ts().timelockEnabled, "Use queueTimelock");
         if (_status == 7) {
@@ -294,12 +291,18 @@ contract TreasuryFacet is ITreasury, WithStorage {
 
             if (_status == 1) {
                 ts().assetPricer[_address] = _pricer;
-                ts().quotes[_address] = _quote;
             }
 
             (bool registered, ) = indexInRegistry(_address, _status);
             if (!registered) {
                 ts().registry[_status].push(_address);
+
+                if (_status == 1) {
+                    (bool reg, uint256 index) = indexInRegistry(_address, _status);
+                    if (reg) {
+                        delete ts().registry[_status][index];
+                    }
+                }
             }
         }
         emit Permissioned(_address, _status, true);
@@ -365,7 +368,15 @@ contract TreasuryFacet is ITreasury, WithStorage {
         }
 
         qs().push(
-            Queue({managing: _status, toPermit: _address, pricer: _pricer, timelockEnd: timelock, nullify: false, executed: false, quote: _quote})
+            Queue({
+                managing: _status,
+                toPermit: _address,
+                pricer: _pricer,
+                timelockEnd: timelock,
+                nullify: false,
+                executed: false,
+                quote: _quote
+            })
         );
         emit PermissionQueued(_status, _address);
     }
@@ -395,6 +406,13 @@ contract TreasuryFacet is ITreasury, WithStorage {
             (bool registered, ) = indexInRegistry(info.toPermit, info.managing);
             if (!registered) {
                 ts().registry[info.managing].push(info.toPermit);
+
+                if (info.managing == 1) {
+                    (bool reg, uint256 index) = indexInRegistry(info.toPermit, 1);
+                    if (reg) {
+                        delete ts().registry[1][index];
+                    }
+                }
             }
         }
         qs().executed[_index] = true;

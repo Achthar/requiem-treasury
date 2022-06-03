@@ -4,17 +4,20 @@
 const { FacetCutAction, getSelectors } = require('../libraries/diamond.js')
 const { ethers } = require('hardhat')
 
-const addresses = require('../../deployments/addresses.json')
-const oldABI = require('../../contracts/oldFacets/v00/treasuryFacetABI.json')
+const { addresses } = require('../../deployments/addresses')
+const oldABI = require('../../contracts/oldFacets/v01/treasuryFacetABI.json')
 
 // script for upgrading the treasury facet
 // we assume that all functions are desired to be replaced
 async function main() {
-    const network = await ethers.getDefaultProvider().getNetwork();
-    const chainId = network.chainId
+    const chainId = await (await ethers.getSigner()).getChainId();
+
+    const accounts = await ethers.getSigners()
+    const operator = accounts[0]
+
 
     // get old facet address
-    const oldTreasuryfacetAddress = '0xcd064614BA6e6Fc7C99D6cAbA2c1C30fe4309ecD'
+    const oldTreasuryfacetAddress = '0x40103f8C109C92E7abe460ceFDCD539F0eB4D521'
 
     // get new contract factory
     const TreasuryFacet = await ethers.getContractFactory('TreasuryFacet')
@@ -44,9 +47,9 @@ async function main() {
             [{
                 facetAddress: ethers.constants.AddressZero,
                 action: FacetCutAction.Remove,
-                functionSelectors: oldSelectors
+                functionSelectors: selectors
             }],
-            ethers.constants.AddressZero, '0x', { gasLimit: 800000 }
+            ethers.constants.AddressZero, '0x', { gasLimit: 8000000 }
         )
         receipt = await tx.wait()
 
