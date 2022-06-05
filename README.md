@@ -14,7 +14,11 @@ The `contracts/facets/DiamondCutFacet.sol` file shows how to implement the `diam
 
 The `contracts/facets/DiamondLoupeFacet.sol` file shows how to implement the four standard loupe functions.
 
+The `contracts/facets/TreasuryFacet.sol` file implements the treasury base facet.
+
 The `contracts/libraries/LibDiamond.sol` file shows how to implement Diamond Storage and a `diamondCut` internal function.
+
+The `contracts/libraries/LibStorage.sol` contains the relevant storage for the treasury.
 
 The `scripts/deploy.js` file shows how to deploy a diamond.
 

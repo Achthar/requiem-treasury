@@ -28,14 +28,15 @@ const status = {
 
 // define here which action to queue
 const queues = {
-    DEPOSITOR: false,
+    DEPOSITOR: true,
     DEPOSITORUSER: false,
     STABLEPRICER: false,
-    PAIRPRICER: true,
+    PAIRPRICER: false,
     WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
-    REWARDMANAGER: false,
-    TRIVIAL: false
+    REWARDMANAGER: true,
+    TRIVIAL: false,
+    ABREQ_PRICER: false
 }
 
 
@@ -152,6 +153,26 @@ async function main() {
             addresses.assets.WEIGHTED_POOL_CLASSIC[chainId],
             addresses.pricers.WEIGHTED[chainId],
             addresses.quotes.USDT[chainId]
+        )
+
+        console.log("Queue complete")
+        setTimeout(() => { console.log("Waiting done"); }, 15000);
+
+        currIndex = await treasuryContract.lastPermissionQueueIndex()
+        console.log("index", currIndex)
+
+        console.log("execute calculator")
+        await treasuryContract.execute(currIndex)
+    }
+
+
+    if (queues.ABREQ_PRICER) {
+        console.log("queue REQ Pair Pricer")
+        await treasuryContract.queueTimelock(
+            status.ASSET,
+            addresses.assets.PAIR_ABREQ_DAI[chainId],
+            addresses.pricers.ABREQ_PAIR[chainId],
+            addresses.quotes.DAI[chainId]
         )
 
         console.log("Queue complete")
