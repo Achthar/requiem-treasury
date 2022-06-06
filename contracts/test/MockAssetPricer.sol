@@ -22,4 +22,12 @@ contract MockAssetPricer is IAssetPricer {
     ) external view override returns (uint256) {
         return (scalar * _amount * 10**(REQ.decimals() - IERC20(_asset).decimals())) / 1e18;
     }
+
+    function slashedValuation(
+        address _asset,
+        address,
+        uint256 _amount
+    ) external view override returns (uint256) {
+        return (scalar * _amount * 10**(REQ.decimals() - IERC20(_asset).decimals())) / 1e18;
+    }
 }

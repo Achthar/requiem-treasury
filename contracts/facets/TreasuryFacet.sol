@@ -257,7 +257,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
         address[] memory assets = ts().registry[1];
         for (uint256 i = 0; i < assets.length; i++) {
             if (assets[i] != address(0) && ts().permissions[1][assets[i]]) {
-                reserves += assetValue(assets[i], IERC20(assets[i]).balanceOf(address(this)));
+                reserves += slashedAssetValue(assets[i], IERC20(assets[i]).balanceOf(address(this)));
             }
         }
         ts().totalReserves = reserves;
@@ -441,7 +441,7 @@ contract TreasuryFacet is ITreasury, WithStorage {
     }
 
     /**
-     * @notice returns REQ valuation of asset
+     * @notice returns external REQ valuation of asset
      * @param _asset address
      * @param _amount uint256
      * @return value_ uint256
@@ -449,6 +449,20 @@ contract TreasuryFacet is ITreasury, WithStorage {
     function assetValue(address _asset, uint256 _amount) public view override returns (uint256 value_) {
         if (ts().permissions[1][_asset]) {
             value_ = IAssetPricer(ts().assetPricer[_asset]).valuation(_asset, ts().quotes[_asset], _amount);
+        } else {
+            revert("Treasury: invalid asset");
+        }
+    }
+
+    /**
+     * @notice returns internal REQ valuation of asset
+     * @param _asset address
+     * @param _amount uint256
+     * @return value_ uint256
+     */
+    function slashedAssetValue(address _asset, uint256 _amount) public view returns (uint256 value_) {
+        if (ts().permissions[1][_asset]) {
+            value_ = IAssetPricer(ts().assetPricer[_asset]).slashedValuation(_asset, ts().quotes[_asset], _amount);
         } else {
             revert("Treasury: invalid asset");
         }

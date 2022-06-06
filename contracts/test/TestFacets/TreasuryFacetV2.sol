@@ -218,37 +218,33 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
         ts().debtLimits[_address] = _limit;
     }
 
-    /**
+     /**
      * @notice enable permission from queue
      * @param _status STATUS
      * @param _address address
-     * @param _calculator address
+     * @param _pricer address
+     * @param _quote address
      */
     function enable(
         uint256 _status,
         address _address,
-        address _calculator
+        address _pricer,
+        address _quote
     ) external {
-        require(ts().timelockEnabled == false, "Use queueTimelock");
+        require(!ts().timelockEnabled, "Use queueTimelock");
         if (_status == 7) {
             ts().CREQ = ICreditREQ(_address);
         } else {
             ts().permissions[_status][_address] = true;
 
             if (_status == 1) {
-                ts().assetPricer[_address] = _calculator;
+                ts().assetPricer[_address] = _pricer;
+                ts().quotes[_address] = _quote;
             }
 
             (bool registered, ) = indexInRegistry(_address, _status);
             if (!registered) {
                 ts().registry[_status].push(_address);
-
-                if (_status == 1) {
-                    (bool reg, uint256 index) = indexInRegistry(_address, _status);
-                    if (reg) {
-                        delete ts().registry[_status][index];
-                    }
-                }
             }
         }
         emit Permissioned(_address, _status, true);
@@ -403,6 +399,20 @@ contract TreasuryFacetV2 is ITreasury, WithStorage {
             value_ = IAssetPricer(ts().assetPricer[_token]).valuation(_token, address(0), _amount);
         } else {
             revert(invalidAsset);
+        }
+    }
+
+    /**
+     * @notice returns internal REQ valuation of asset
+     * @param _asset address
+     * @param _amount uint256
+     * @return value_ uint256
+     */
+    function slashedAssetValue(address _asset, uint256 _amount) public view returns (uint256 value_) {
+        if (ts().permissions[1][_asset]) {
+            value_ = IAssetPricer(ts().assetPricer[_asset]).slashedValuation(_asset, ts().quotes[_asset], _amount);
+        } else {
+            revert("Treasury: invalid asset");
         }
     }
 

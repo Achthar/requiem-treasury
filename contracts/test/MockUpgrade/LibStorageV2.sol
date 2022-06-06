@@ -57,6 +57,7 @@ struct TreasuryStorageV2 {
     mapping(uint256 => address[]) registry;
     mapping(uint256 => mapping(address => bool)) permissions;
     mapping(address => address) assetPricer;
+    mapping(address => address) quotes;
     mapping(address => uint256) debtLimits;
     // asset data
     mapping(address => uint256) assetReserves;

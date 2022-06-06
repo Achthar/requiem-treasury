@@ -12,12 +12,12 @@ const oldABI = require('../../contracts/oldFacets/v01/treasuryFacetABI.json')
 async function main() {
     const chainId = await (await ethers.getSigner()).getChainId();
 
-    const accounts = await ethers.getSigners()
-    const operator = accounts[0]
+    // const accounts = await ethers.getSigners()
+    // const operator = accounts[0]
 
 
     // get old facet address
-    const oldTreasuryfacetAddress = '0x40103f8C109C92E7abe460ceFDCD539F0eB4D521'
+    const oldTreasuryfacetAddress = '0x93D20b7B5c5D2E219885Ee6091eb7bBA58D108f4'
 
     // get new contract factory
     const TreasuryFacet = await ethers.getContractFactory('TreasuryFacet')
@@ -32,9 +32,9 @@ async function main() {
 
 
     // get old contract data
-    const oldContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(oldABI))
+    // const oldContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(oldABI))
 
-    const oldSelectors = getSelectors(oldContract)
+    // const oldSelectors = getSelectors(oldContract)
 
     // old selectors
     let selectors = await diamondLoupeFacet.facetFunctionSelectors(oldTreasuryfacetAddress)
@@ -57,7 +57,7 @@ async function main() {
         if (!receipt.status) {
             throw Error(`Diamond remove failed: ${tx.hash}`)
         } else {
-            console.log("Upgrade succeeded")
+            console.log("Removal of facets succeeded")
         }
     }
 
@@ -76,7 +76,7 @@ async function main() {
     if (!receipt.status) {
         throw Error(`Diamond upgrade failed: ${tx.hash}`)
     } else {
-        console.log("Upgrade succeeded")
+        console.log("Adding new facets succeeded")
     }
 }
 

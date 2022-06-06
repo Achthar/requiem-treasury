@@ -31,9 +31,13 @@ async function main() {
 
     const treasuryContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
 
+    const loupeContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(DiamondLoupeArtifact.abi), operator)
+
 
     const reqContract = new ethers.Contract(addresses.reqAddress[chainId], new ethers.utils.Interface(ERC20.abi), operator)
 
+    const facets = await loupeContract.facets()
+    console.log("Facets", facets)
 
     const currIndex = await treasuryContract.lastPermissionQueueIndex()
     console.log("last queue index", currIndex)
