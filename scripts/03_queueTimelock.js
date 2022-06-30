@@ -28,16 +28,24 @@ const status = {
 
 // define here which action to queue
 const queues = {
-    DEPOSITOR: false,
+    DEPOSITOR: true,
     DEPOSITORUSER: false,
     STABLEPRICER: false,
     PAIRPRICER: false,
-    WEIGHTEDPRICER: true,
+    WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
-    REWARDMANAGER: false,
+    REWARDMANAGER: true,
     TRIVIAL: false,
-    ABREQ_PRICER: true
+    ABREQ_PRICER: false
 }
+
+function delay(delayInms) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(2);
+      }, delayInms);
+    });
+  }
 
 
 // simple script for queuing actions
@@ -52,21 +60,23 @@ async function main() {
     let currIndex = await treasuryContract.lastPermissionQueueIndex()
     console.log("current index", currIndex)
     if (queues.DEPOSITOR) {
-        console.log("queue Asset Depositor")
+        console.log("queue depoAddress as depositor")
+
         await treasuryContract.queueTimelock(
             status.ASSETDEPOSITOR,
-            addresses.bondDepo[chainId],
+            addresses.digitalCallBondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
+        console.log("Waiting done");
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
 
-        console.log("execute Asset Depositor")
+        console.log("execute calculator")
         await treasuryContract.execute(currIndex)
     }
 
@@ -74,13 +84,13 @@ async function main() {
         console.log("queue Rewardmanager")
         await treasuryContract.queueTimelock(
             status.REWARDMANAGER,
-            addresses.bondDepo[chainId],
+            addresses.digitalCallBondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
@@ -190,25 +200,6 @@ async function main() {
         await treasuryContract.queueTimelock(
             status.ASSETDEPOSITOR,
             operator.address,
-            ethers.constants.AddressZero,
-            ethers.constants.AddressZero
-        )
-
-        console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
-
-        currIndex = await treasuryContract.lastPermissionQueueIndex()
-        console.log("index", currIndex)
-
-        console.log("execute calculator")
-        await treasuryContract.execute(currIndex)
-    }
-
-    if (queues.DEPOSITOR) {
-        console.log("queue user as depositor")
-        await treasuryContract.queueTimelock(
-            status.ASSETDEPOSITOR,
-            addresses.bondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )

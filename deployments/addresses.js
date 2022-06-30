@@ -3,7 +3,16 @@ const addresses = {
         43113: "0x95034449E6cD17330E62D8e33a75a39927Fb02cb"
     },
     "bondDepo": {
-        43113: "0xd57697959027073D3f5276Bb2b1124fCe3fd2540"
+        43113: "0x2479902372c1cd91e2d9d3c1ebed0940167efca2"
+    },
+    "callBondDepo": {
+        43113: "0x37bb1Aa8A339B65aeD51B6354a2518011F668A9B"
+    },
+    "digitalCallBondDepo": {
+        43113: "0xfBE3B3E624a00f9f7BB6bb13b3757848088a583F"
+    },
+    "callableBondDepo": {
+        43113: "0xb7879d3bbE48838a0436AE9CE75bEE1F6eb7282E"
     },
     "diamondInitAddress": {
         43113: "0xdb409149AA3C2f2Bb3580994e1637f3e918D5413"
@@ -37,6 +46,14 @@ const addresses = {
             43113: "0x51991dfd191D15d7055c45f4DB849Fea0e8004CD"
         }
 
+    },
+    "oracles": {
+        "ETHUSD": {
+            43113: "0x86d67c3D38D2bCeE722E601025C25a575021c6EA"
+        },
+        "AVAXUSD": {
+            43113: "0x5498BB86BC934c8D34FDA08E81D444153d0D06aD"
+        }
     },
     "facets": {
         "DiamondCutFacet": {
