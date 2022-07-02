@@ -28,24 +28,24 @@ const status = {
 
 // define here which action to queue
 const queues = {
-    DEPOSITOR: true,
+    DEPOSITOR: false,
     DEPOSITORUSER: false,
     STABLEPRICER: false,
-    PAIRPRICER: false,
+    PAIRPRICER: true,
     WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
-    REWARDMANAGER: true,
+    REWARDMANAGER: false,
     TRIVIAL: false,
     ABREQ_PRICER: false
 }
 
 function delay(delayInms) {
     return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(2);
-      }, delayInms);
+        setTimeout(() => {
+            resolve(2);
+        }, delayInms);
     });
-  }
+}
 
 
 // simple script for queuing actions
@@ -109,7 +109,7 @@ async function main() {
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
@@ -128,7 +128,7 @@ async function main() {
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
@@ -141,13 +141,13 @@ async function main() {
         console.log("queue General Pair Pricer")
         await treasuryContract.queueTimelock(
             status.ASSET,
-            addresses.assets.PAIR_AVAX_USDC[chainId],
+            addresses.assets.PAIR_ABREQ_DAI[chainId],
             addresses.pricers.PAIR[chainId],
             addresses.quotes.USDC[chainId]
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
@@ -166,7 +166,7 @@ async function main() {
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
@@ -186,7 +186,7 @@ async function main() {
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
@@ -205,7 +205,7 @@ async function main() {
         )
 
         console.log("Queue complete")
-        setTimeout(() => { console.log("Waiting done"); }, 15000);
+        await delay(10000)
 
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
