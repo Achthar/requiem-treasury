@@ -30,8 +30,8 @@ const status = {
 const queues = {
     DEPOSITOR: false,
     DEPOSITORUSER: false,
-    STABLEPRICER: false,
-    PAIRPRICER: true,
+    STABLEPRICER: true,
+    PAIRPRICER: false,
     WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
     REWARDMANAGER: false,
@@ -64,7 +64,7 @@ async function main() {
 
         await treasuryContract.queueTimelock(
             status.ASSETDEPOSITOR,
-            addresses.digitalCallBondDepo[chainId],
+            addresses.bondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
@@ -84,7 +84,7 @@ async function main() {
         console.log("queue Rewardmanager")
         await treasuryContract.queueTimelock(
             status.REWARDMANAGER,
-            addresses.digitalCallBondDepo[chainId],
+            addresses.bondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
@@ -105,7 +105,7 @@ async function main() {
             status.ASSET,
             addresses.assets.STABLELP[chainId],
             addresses.pricers.STABLE[chainId],
-            addresses.quotes.DAI[chainId]
+            addresses.quotes.USDC[chainId]
         )
 
         console.log("Queue complete")
@@ -122,9 +122,9 @@ async function main() {
         console.log("queue Trivial Pricer")
         await treasuryContract.queueTimelock(
             status.ASSET,
-            addresses.assets.DAI[chainId],
+            addresses.assets.USDC[chainId],
             addresses.pricers.TRIVIAL[chainId],
-            addresses.quotes.DAI[chainId]
+            addresses.quotes.USDC[chainId]
         )
 
         console.log("Queue complete")
@@ -141,7 +141,7 @@ async function main() {
         console.log("queue General Pair Pricer")
         await treasuryContract.queueTimelock(
             status.ASSET,
-            addresses.assets.PAIR_ABREQ_DAI[chainId],
+            addresses.assets.PAIR_ABREQ_USDC[chainId],
             addresses.pricers.PAIR[chainId],
             addresses.quotes.USDC[chainId]
         )

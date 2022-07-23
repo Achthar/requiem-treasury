@@ -8,6 +8,14 @@ const { ethers } = require('hardhat')
 
 const { addresses } = require('../deployments/addresses')
 
+function delay(delayInms) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(2);
+        }, delayInms);
+    });
+}
+
 // simple script for queuing actions
 // sometimes then execute command does not work right away
 async function main() {
@@ -16,17 +24,18 @@ async function main() {
     const accounts = await ethers.getSigners()
     const operator = accounts[0]
 
-    const toDeposit = ethers.BigNumber.from('1000').mul(ethers.BigNumber.from(10).pow(18))
+    const toDeposit = ethers.BigNumber.from('1000').mul(ethers.BigNumber.from(10).pow(6))
     const profit = ethers.BigNumber.from('1').mul(ethers.BigNumber.from(10).pow(18))
 
     const treasuryContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
 
-    const assetContract = new ethers.Contract(addresses.assets.DAI[chainId], new ethers.utils.Interface(ERC20Artifact.abi), operator)
+    const assetContract = new ethers.Contract(addresses.assets.USDC[chainId], new ethers.utils.Interface(ERC20Artifact.abi), operator)
 
     const allowance = await assetContract.allowance(operator.address, treasuryContract.address)
 
     if (allowance.lt(toDeposit)) {
         await assetContract.approve(treasuryContract.address, ethers.constants.MaxUint256)
+        await delay(10000)
     }
 
     await treasuryContract.deposit(

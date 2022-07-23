@@ -55,12 +55,12 @@ module.exports = {
       saveDeployments: true,
       // tags: ['staging'],
       // gasMultiplier: 4,
-      gas: 800000,
-      gasPrice: 2500000000,
+      gas: 8000000,
+      gasPrice: 300000000000,
     },
   },
   solidity: {
-    version: '0.8.14',
+    version: '0.8.15',
     settings: {
       optimizer: {
         enabled: true,
