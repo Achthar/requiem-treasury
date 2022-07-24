@@ -28,13 +28,13 @@ const status = {
 
 // define here which action to queue
 const queues = {
-    DEPOSITOR: false,
+    DEPOSITOR: true,
     DEPOSITORUSER: false,
-    STABLEPRICER: true,
+    STABLEPRICER: false,
     PAIRPRICER: false,
     WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
-    REWARDMANAGER: false,
+    REWARDMANAGER: true,
     TRIVIAL: false,
     ABREQ_PRICER: false
 }
@@ -64,7 +64,7 @@ async function main() {
 
         await treasuryContract.queueTimelock(
             status.ASSETDEPOSITOR,
-            addresses.bondDepo[chainId],
+            addresses.callableBondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
@@ -76,7 +76,7 @@ async function main() {
         currIndex = await treasuryContract.lastPermissionQueueIndex()
         console.log("index", currIndex)
 
-        console.log("execute calculator")
+        console.log("execute deositor")
         await treasuryContract.execute(currIndex)
     }
 
@@ -84,7 +84,7 @@ async function main() {
         console.log("queue Rewardmanager")
         await treasuryContract.queueTimelock(
             status.REWARDMANAGER,
-            addresses.bondDepo[chainId],
+            addresses.callableBondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
@@ -162,7 +162,7 @@ async function main() {
             status.ASSET,
             addresses.assets.WEIGHTED_POOL_CLASSIC[chainId],
             addresses.pricers.WEIGHTED[chainId],
-            addresses.quotes.USDT[chainId]
+            addresses.quotes.USDC[chainId]
         )
 
         console.log("Queue complete")
