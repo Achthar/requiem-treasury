@@ -64,7 +64,7 @@ async function main() {
 
         await treasuryContract.queueTimelock(
             status.ASSETDEPOSITOR,
-            addresses.callableBondDepo[chainId],
+            addresses.digitalCallBondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
@@ -84,7 +84,7 @@ async function main() {
         console.log("queue Rewardmanager")
         await treasuryContract.queueTimelock(
             status.REWARDMANAGER,
-            addresses.callableBondDepo[chainId],
+            addresses.digitalCallBondDepo[chainId],
             ethers.constants.AddressZero,
             ethers.constants.AddressZero
         )
