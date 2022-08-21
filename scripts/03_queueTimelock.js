@@ -28,13 +28,13 @@ const status = {
 
 // define here which action to queue
 const queues = {
-    DEPOSITOR: false,
+    DEPOSITOR: true,
     DEPOSITORUSER: false,
     STABLEPRICER: false,
     PAIRPRICER: false,
-    WEIGHTEDPRICER: true,
+    WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
-    REWARDMANAGER: false,
+    REWARDMANAGER: true,
     TRIVIAL: false,
     ABREQ_PRICER: false
 }
@@ -103,7 +103,7 @@ async function main() {
         console.log("queue Stablepricer")
         await treasuryContract.queueTimelock(
             status.ASSET,
-            addresses.assets.STABLELP[chainId],
+            addresses.stable[chainId].pools[0],
             addresses.pricers.STABLE[chainId],
             addresses.quotes.USDC[chainId]
         )
@@ -141,8 +141,8 @@ async function main() {
         console.log("queue General Pair Pricer")
         await treasuryContract.queueTimelock(
             status.ASSET,
-            addresses.assets.PAIR_ABREQ_USDC[chainId],
-            addresses.pricers.PAIR[chainId],
+            addresses.pairs[chainId].ROSE_USDC,
+            addresses.pricers.ROSE_USDC[chainId],
             addresses.quotes.USDC[chainId]
         )
 

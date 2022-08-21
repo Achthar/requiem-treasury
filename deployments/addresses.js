@@ -5,18 +5,18 @@ const addresses = {
     },
     "bondDepo": {
         43113: "0x2479902372c1cd91e2d9d3c1ebed0940167efca2",
-        42261: "0x5e72a633D544e74f8B80c6a5A8bc4674E3b7a504"
+        42261: "0x628Ef1FE0A45be404c451c613c0B2c901452684f"
     },
     "callBondDepo": {
         43113: "0x37bb1Aa8A339B65aeD51B6354a2518011F668A9B"
     },
     "digitalCallBondDepo": {
         43113: "0xfBE3B3E624a00f9f7BB6bb13b3757848088a583F",
-        42261: "0xA7b5c1Fb20B4886B6C2242f7b1E3D3b423406711"
+        42261: "0xfA56e0AEf409B8D3A497deb1Db64Ae0264DCD420"
     },
     "callableBondDepo": {
         43113: "0xb7879d3bbE48838a0436AE9CE75bEE1F6eb7282E",
-        42261: "0xA3Df8603e964611464297464c25A2815a341FB1D"
+        42261: "0x42cA2a6eD9f519B4aB1E99159cAe370F1fCCC3bc"
     },
     "diamondInitAddress": {
         43113: "0xdb409149AA3C2f2Bb3580994e1637f3e918D5413",
@@ -116,7 +116,7 @@ const addresses = {
     "pricers": {
         "STABLE": {
             43113: "0xbA2B783cB21726E454eCa3712CE9E1b5806bAFC5",
-            42261: "0x2D81E7dFe6B20e3ffb75dcfC359920ff8FaBa35e"
+            42261: "0x3b5f0eC8a1249828BC94869eBF1F7a65f19B5601"
         },
         "WEIGHTED": {
             43113: "0x5ad0Dd39cbd3a6Ef4E1f47D3b0Dce9e3A62CEf99",
@@ -132,6 +132,9 @@ const addresses = {
         },
         "ABREQ_PAIR": {
             43113: "0xb6111cB73CC8dC4E5e231745c286f60FBb31Ba02"
+        },
+        "ROSE_USDC": {
+            42261: "0xA1FA791BA61C03D84cD8ca7cD44DAB7F89fe3f01"
         }
     },
     "quotes": {
@@ -189,6 +192,11 @@ const addresses = {
                 "0x9912aafb08f9c018bd0317c673951a5f4967831f" // BUSD-USDC-USDT
             ]
 
+        }
+    },
+    "pairs": {
+        42261: {
+            "ROSE_USDC": '0x3B2b78e1F16985a77AFbdf63Fa594119E5D7629D'
         }
     }
 }
