@@ -30,9 +30,9 @@ const status = {
 const queues = {
     DEPOSITOR: false,
     DEPOSITORUSER: false,
-    STABLEPRICER: true,
+    STABLEPRICER: false,
     PAIRPRICER: false,
-    WEIGHTEDPRICER: false,
+    WEIGHTEDPRICER: true,
     ASSETMANAGER: false,
     REWARDMANAGER: false,
     TRIVIAL: false,
@@ -158,11 +158,16 @@ async function main() {
 
     if (queues.WEIGHTEDPRICER) {
         console.log("queue Weighted Pool Pricer")
+        console.log(
+            addresses.weighted[chainId].pools[0],
+            addresses.pricers.WEIGHTED[chainId],
+            addresses.quotes.USDT[chainId]
+        )
         await treasuryContract.queueTimelock(
             status.ASSET,
-            addresses.assets.WEIGHTED_POOL_CLASSIC[chainId],
+            addresses.weighted[chainId].pools[0],
             addresses.pricers.WEIGHTED[chainId],
-            addresses.quotes.USDC[chainId]
+            addresses.quotes.USDT[chainId]
         )
 
         console.log("Queue complete")

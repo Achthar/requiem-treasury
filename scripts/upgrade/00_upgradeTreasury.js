@@ -17,7 +17,7 @@ async function main() {
 
 
     // get old facet address
-    const oldTreasuryfacetAddress = '0x93D20b7B5c5D2E219885Ee6091eb7bBA58D108f4'
+    const oldTreasuryfacetAddress = addresses.facets.TreasuryFacet[chainId] //'0x93D20b7B5c5D2E219885Ee6091eb7bBA58D108f4'
 
     // get new contract factory
     const TreasuryFacet = await ethers.getContractFactory('TreasuryFacet')

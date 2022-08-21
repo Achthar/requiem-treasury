@@ -31,15 +31,21 @@ async function main() {
 
     const treasuryContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
 
-    const loupeContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(DiamondLoupeArtifact.abi), operator)
+    // const loupeContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(DiamondLoupeArtifact.abi), operator)
 
+    // const reqContract = new ethers.Contract(addresses.reqAddress[chainId], new ethers.utils.Interface(ERC20.abi), operator)
 
-    const reqContract = new ethers.Contract(addresses.reqAddress[chainId], new ethers.utils.Interface(ERC20.abi), operator)
+    const valOfAsset = await treasuryContract.assetValue(addresses.weighted[chainId].pools[0], ethers.BigNumber.from(10).pow(16))
 
+    console.log("Value of asset", ethers.utils.formatEther(valOfAsset), valOfAsset)
 
-    const valOfAsset = await treasuryContract.assetValue(addresses.assets.STABLELP[chainId], ethers.BigNumber.from(10).pow(18))
+    const pricer = await treasuryContract.assetPricer(addresses.weighted[chainId].pools[0])
 
-    console.log("Value of asset", ethers.utils.formatEther(valOfAsset))
+    console.log("Pricer", pricer)
+
+    const quote = await treasuryContract.quote(addresses.weighted[chainId].pools[0])
+
+    console.log("Quote", quote)
 }
 
 main()

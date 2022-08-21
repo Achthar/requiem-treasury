@@ -106,7 +106,7 @@ const addresses = {
         },
         "TreasuryFacet": {
             43113: "0xdad13c4b17b76ac307e35536e6ff89bab4529a9e",
-            42261: "0x3effC2e12D4E10F7cEe599f8D72c8Ae355e09d05"
+            42261: "0x953dbB9940d5B670761A4E923d1b32b143CAA401"
         },
         "ManagementFacet": {
             43113: "0x53f54c22Ae77706bCCC7Ebc2078851EB42f95c17",

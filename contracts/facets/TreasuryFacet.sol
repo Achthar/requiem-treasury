@@ -483,6 +483,10 @@ contract TreasuryFacet is ITreasury, WithStorage {
         return ts().assetPricer[_entry];
     }
 
+    function quote(address _asset) external view returns (address) {
+        return ts().quotes[_asset];
+    }
+
     function registry(uint256 _status, uint256 _entry) external view returns (address) {
         return ts().registry[_status][_entry];
     }
