@@ -28,13 +28,13 @@ const status = {
 
 // define here which action to queue
 const queues = {
-    DEPOSITOR: true,
+    DEPOSITOR: false,
     DEPOSITORUSER: false,
-    STABLEPRICER: false,
+    STABLEPRICER: true,
     PAIRPRICER: false,
     WEIGHTEDPRICER: false,
     ASSETMANAGER: false,
-    REWARDMANAGER: true,
+    REWARDMANAGER: false,
     TRIVIAL: false,
     ABREQ_PRICER: false
 }

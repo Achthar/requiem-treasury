@@ -24,8 +24,8 @@ async function main() {
     const accounts = await ethers.getSigners()
     const operator = accounts[0]
 
-    const toDeposit = ethers.BigNumber.from('1000').mul(ethers.BigNumber.from(10).pow(6))
-    const profit = ethers.BigNumber.from('1').mul(ethers.BigNumber.from(10).pow(18))
+    const toDeposit = ethers.BigNumber.from('10000').mul(ethers.BigNumber.from(10).pow(6))
+    const profit = ethers.BigNumber.from('10').mul(ethers.BigNumber.from(10).pow(18))
 
     const treasuryContract = new ethers.Contract(addresses.diamondAddress[chainId], new ethers.utils.Interface(TreasuryArtifact.abi), operator)
 

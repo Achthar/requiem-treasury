@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.16;
 
 import "../../libraries/LibStorage.sol";
 import "../../utils/SafeERC20.sol";
